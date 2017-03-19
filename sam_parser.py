@@ -6,4 +6,4 @@ class SamParser(object):
         self.samfile = samfile
 
     def reads(self):
-        return list(samfile.fetch())
+        return list(self.samfile.fetch())

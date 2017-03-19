@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 from sam_parser import SamParser
-from template_reference import TemplateReference
+from reference import Reference
 
 def parse_sam(filename):
     reads = SamParser(pysam.AlignmentFile(filename, "rb")).reads()
@@ -112,7 +112,7 @@ def get_reference_objects(filename):
         windows_formatted_lines = line.split('\r')
         for wl in windows_formatted_lines:
             name, n20, sequence, pam = wl.split('\t')
-            name_to_object[name] = TemplateReference(name, n20, sequence, pam)
+            name_to_object[name] = Reference(name, n20, sequence, pam)
     return name_to_object
 
 def count_indels(reference_name_to_reads, reference_name_to_template):
@@ -212,6 +212,10 @@ def run():
     template_file = "refseq_guide.txt"
     reference_name_to_reads = parse_sam(sam_file)
     reference_name_to_template = get_reference_objects(template_file)
+
+    reads = parse_sam(sam_file)
+    references = parse_references(template_file)
+
     count_indels(reference_name_to_reads, reference_name_to_template)
 
 run()

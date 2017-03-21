@@ -1,3 +1,5 @@
+from reference import Reference
+
 class ReferenceParser():
 
     def __init__(self, reference_file):
@@ -6,7 +8,7 @@ class ReferenceParser():
     def references(self):
         references_from_file = []
 
-        for line in reference_file:
+        for line in self.reference_file:
             windows_formatted_lines = line.split('\r')
             for wl in windows_formatted_lines:
                 name, n20, sequence, pam = wl.split('\t')

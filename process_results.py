@@ -49,16 +49,6 @@ def get_indels_from_reads(reads, template):
             reads_to_indels[read.query_name] = indels
     return all_found_indels
 
-class Indel(object):
-
-    def __init__(self, start_index, end_index, length, is_deletion):
-        self.start_index = start_index
-        self.end_index = end_index
-        self.length = length
-        self.distance_to_cutsite = 0 # initialized to 0
-        self.is_deletion = is_deletion
-        self.is_insertion = not is_deletion
-
 def has_other_mismatch(cigartuples):
     for cig in cigartuples:
         cig_type, _ = cig

@@ -24,3 +24,16 @@ class SamParser(object):
         return Read(query_name=pysam_read.query_name,
                     reference_name=pysam_read.reference_name,
                     reference_positions=pysam_read.get_reference_positions(full_length=True))
+
+    def _read_has_non_insertions_or_deletions(self, pysam_read):
+        for cig in pysam_read.cigartuples:
+            cig_type, _ = cig
+            if self.is_other(cig_type):
+                return True
+        return False
+
+    def is_insertion_or_deletion(self, cigar_type):
+        return cigar_type == 1 or cigar_type == 2
+
+    def is_other(self, cigar_type):
+        return cigar_type != 0 and not self.is_insertion_or_deletion(cigar_type)

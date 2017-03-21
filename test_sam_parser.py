@@ -6,8 +6,9 @@ class TestSamParser(unittest.TestCase):
 
     def mock_fetch(self):
         class FakeAlignedSegment(object):
-            def __init__(self, query_name=None, reference_name=None, reference_positions=None):
+            def __init__(self, query_name=None, reference_name=None, reference_positions=None, cigartuples=()):
                 self.query_name = query_name
+                self.cigartuples = cigartuples
                 if reference_name:
                     self.reference_name = reference_name
                 if reference_positions:
@@ -16,10 +17,13 @@ class TestSamParser(unittest.TestCase):
                 return self.reference_positions
 
         segment_a = FakeAlignedSegment(query_name='foo')
-
-        segment_b = FakeAlignedSegment(query_name='bar', reference_name='cats', reference_positions=())
-
-        segment_c = FakeAlignedSegment(query_name='baz', reference_name='dogs', reference_positions=(1,2,None,None,3))
+        segment_b = FakeAlignedSegment(query_name='bar',
+                                       reference_name='cats',
+                                       reference_positions=())
+        segment_c = FakeAlignedSegment(query_name='baz',
+                                       reference_name='dogs',
+                                       reference_positions=(1,2,None,None,3),
+                                       cigartuples=((0,1),(0,2),(2,None),(2,None),(0,3)))
 
         return [segment_a, segment_b, segment_c]
 

@@ -49,12 +49,6 @@ def get_indels_from_reads(reads, template):
             reads_to_indels[read.query_name] = indels
     return all_found_indels
 
-def has_other_mismatch(cigartuples):
-    for cig in cigartuples:
-        cig_type, _ = cig
-        if is_other(cig_type):
-            return True
-    return False
 
 def get_indels_from_reference_positions(reference_positions):
 

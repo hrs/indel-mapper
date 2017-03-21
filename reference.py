@@ -3,12 +3,13 @@ from Bio.Alphabet import generic_dna
 
 class Reference(object):
 
-    def __init__(self, name, n20, sequence, pam):
+    def __init__(self, name, n20, sequence, pam, reads):
         self.name = name
         self.n20 = n20.upper()
         self.sequence = sequence.upper()
         self.pam = pam.upper()
         self.reverse_complement_n20 = self._get_reverse_complement_n20()
+        self.reads = reads
 
     def is_ngg(self):
         return self.pam == "NGG"

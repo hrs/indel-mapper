@@ -17,7 +17,8 @@ class Reference(object):
     def _get_reverse_complement_n20(self):
         return str(Seq(self.n20, generic_dna).reverse_complement())
 
-    def is_n20_in_sequence(self):
+    def is_valid(self):
+        # is n20 or reverse complement of n20 in sequence
         if self.n20 in self.sequence:
             low_index, high_index = self._get_low_high_n20_index(self.n20)
 
@@ -53,15 +54,16 @@ class Reference(object):
         else:
             return self.n20_pam_index() + 3
 
-    def distance_to_cutsite(self, indel):
+    def sorted_reads(self):
+        # sorts reads based on their indels' minimum distance from cutsite
+        reads_with_indels = [read for read in self.reads if len(read.indels) > 0]
+        reads_with_indels.sort(key=lambda x: self._min_indel_dist(x))
+        return reads_with_indels
 
-        if indel.end_index < self.cutsite_index():
-            if self.is_ngg():
-                return self.cutsite_index() - indel.end_index
-            else:
-                return indel.end_index - self.cutsite_index()
-        else:
-            if self.is_ngg():
-                return self.cutsite_index() - indel.start_index
-            else:
-                return indel.start_index - self.cutsite_index()
+    def _min_indel_dist(self, read):
+        return min([self.distance_to_cutsite(i) for i in read.indels])
+
+    def distance_to_cutsite(self, indel):
+        if indel.envelope_cutsite(self.cutsite_index()):
+            return 0
+        return min([abs(self.cutsite_index() - indel.start_index), abs(self.cutsite_index() - indel.end_index)])

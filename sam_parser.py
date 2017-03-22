@@ -23,7 +23,9 @@ class SamParser(object):
     def _make_read(self, pysam_read):
         return Read(query_name=pysam_read.query_name,
                     reference_name=pysam_read.reference_name,
-                    reference_positions=pysam_read.get_reference_positions(full_length=True))
+                    reference_positions=pysam_read.get_reference_positions(full_length=True),
+                    query_sequence=pysam_read.query_sequence,
+                    aligned_pairs=pysam_read.get_aligned_pairs())
 
     def _read_has_non_insertions_or_deletions(self, pysam_read):
         for cig in pysam_read.cigartuples:

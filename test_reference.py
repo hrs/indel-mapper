@@ -1,5 +1,7 @@
 import unittest
 from reference import Reference
+from indel import Indel
+from read import Read
 
 class TestReference(unittest.TestCase):
 
@@ -25,7 +27,7 @@ class TestReference(unittest.TestCase):
         self.assertTrue(ngg_reference.is_ngg())
         self.assertFalse(ccn_reference.is_ngg())
 
-    def test_is_n20_in_sequence(self):
+    def test_is_valid(self):
         ngg_reference = Reference("", "cat", "ccattgg", "ngg", [])
         bad_ngg_reference = Reference("", "cat", "ccatt", "ngg", [])
         ccn_reference = Reference("", "cat", "ccgcatt", "ccg", [])
@@ -33,12 +35,12 @@ class TestReference(unittest.TestCase):
         rc_ngg_reference = Reference("", "atg", "ccattgg", "ngg", [])
         rc_ccn_reference = Reference("", "atg", "ccgcatt", "cgg", [])
 
-        self.assertTrue(ngg_reference.is_n20_in_sequence())
-        self.assertFalse(bad_ngg_reference.is_n20_in_sequence())
-        self.assertTrue(ccn_reference.is_n20_in_sequence())
-        self.assertFalse(bad_ccn_reference.is_n20_in_sequence())
-        self.assertTrue(rc_ngg_reference.is_n20_in_sequence())
-        self.assertTrue(rc_ccn_reference.is_n20_in_sequence())
+        self.assertTrue(ngg_reference.is_valid())
+        self.assertFalse(bad_ngg_reference.is_valid())
+        self.assertTrue(ccn_reference.is_valid())
+        self.assertFalse(bad_ccn_reference.is_valid())
+        self.assertTrue(rc_ngg_reference.is_valid())
+        self.assertTrue(rc_ccn_reference.is_valid())
 
     def test_cutsite(self):
         n20 = "aaaatttc"
@@ -57,3 +59,45 @@ class TestReference(unittest.TestCase):
         self.assertEqual(ngg_reference.cutsite_index(), 13)
         self.assertEqual(ccn_reference.n20_pam_index(), 3)
         self.assertEqual(ccn_reference.cutsite_index(), 6)
+
+    def test_sorted_reads(self):
+        n20 = "aaaatttc"
+        sequence = "tactactacaaaatttcnggt"
+        pam = "ngg"
+
+        reference_positions_a = [8,None,None,None,9,10,11,None,None,None,None,12,13,14]
+        read_a = Read("a", "", reference_positions_a, "", ())
+
+        reference_positions_b = [10,15]
+        read_b = Read("b", "", reference_positions_b, "", ())
+
+        reference_positions_c = [10,11,12,13,14]
+        read_c = Read("c", "", reference_positions_c, "", ())
+
+        reference_positions_d = [13,None,None,None,None,14]
+        read_d = Read("d", "", reference_positions_d, "", ())
+
+        reference_positions_e = [18,20]
+        read_e = Read("e", "", reference_positions_e, "", ())
+
+        reads = [read_a, read_b, read_c, read_d, read_e]
+
+        ngg_reference = Reference("", n20, sequence, pam, reads)
+
+        sorted_reads = ngg_reference.sorted_reads()
+
+        self.assertEqual(len(sorted_reads), 4)
+        self.assertEqual(" ".join([read.query_name for read in sorted_reads]), "b d a e")
+
+    def test_distance_to_cutsite(self):
+        n20 = "aaaatttc"
+        sequence = "tactactacaaaatttcnggt"
+        pam = "ngg"
+
+        ngg_reference = Reference("", n20, sequence, pam, []) # cutsite is at 13
+
+        indel_a = Indel(start_index=3, end_index=10, length=6, is_deletion=True)
+        indel_b = Indel(start_index=14, end_index=15, length=6, is_deletion=False)
+
+        self.assertEqual(ngg_reference.distance_to_cutsite(indel_a), 3)
+        self.assertEqual(ngg_reference.distance_to_cutsite(indel_b), 1)

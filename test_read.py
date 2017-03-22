@@ -8,23 +8,24 @@ class TestRead(unittest.TestCase):
         query_name = "foo"
         reference_name = "lion"
         reference_positions = [1,2,3,4,None,None,5]
+        query_sequence = "gatcatcattta"
+        aligned_pairs = ((1,1), (2,2),(3,3),(4,4),(5,None),(6,None),(7,5))
 
-        test_read = Read(query_name, reference_name, reference_positions)
+        test_read = Read(query_name, reference_name, reference_positions, query_sequence, aligned_pairs)
 
         self.assertEqual(test_read.query_name, query_name)
         self.assertEqual(test_read.reference_name, reference_name)
         self.assertEqual(test_read.reference_positions, reference_positions)
-
+        self.assertEqual(test_read.query_sequence, query_sequence)
+        self.assertEqual(test_read.aligned_pairs, aligned_pairs)
 
     def test_create_indels_for_read(self):
-        query_name = ""
-        reference_name = ""
         reference_positions_a = [1,2,3,4,None,None,None,5,6,7,None,None,None,None,8]
-        read_a = Read(query_name, reference_name, reference_positions_a)
+        read_a = Read("", "", reference_positions_a, "", ())
         indels_a = read_a.indels
 
         reference_positions_b = [3,4,5,10,11,12,None,None,13]
-        read_b = Read(query_name, reference_name, reference_positions_b)
+        read_b = Read("", "", reference_positions_b, "", ())
         indels_b = read_b.indels
 
         self.assertEqual(len(indels_a), 2)

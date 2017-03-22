@@ -6,3 +6,6 @@ class Indel(object):
         self.length = length
         self.is_deletion = is_deletion
         self.is_insertion = not is_deletion
+
+    def envelope_cutsite(self, cutsite_index):
+        return self.start_index <= cutsite_index and self.end_index >= cutsite_index

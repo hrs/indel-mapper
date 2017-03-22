@@ -6,15 +6,24 @@ class TestSamParser(unittest.TestCase):
 
     def mock_fetch(self):
         class FakeAlignedSegment(object):
-            def __init__(self, query_name=None, reference_name=None, reference_positions=None, cigartuples=()):
+            def __init__(self, query_name=None,
+                         reference_name=None,
+                         reference_positions=None,
+                         cigartuples=(),
+                         query_sequence=None,
+                         aligned_pairs=()):
                 self.query_name = query_name
                 self.cigartuples = cigartuples
+                self.query_sequence = query_sequence
+                self.aligned_pairs = aligned_pairs
                 if reference_name:
                     self.reference_name = reference_name
                 if reference_positions:
                     self.reference_positions = reference_positions
             def get_reference_positions(self, full_length):
                 return self.reference_positions
+            def get_aligned_pairs(self):
+                return self.aligned_pairs
 
         segment_a = FakeAlignedSegment(query_name='foo')
         segment_b = FakeAlignedSegment(query_name='bar',
@@ -28,7 +37,7 @@ class TestSamParser(unittest.TestCase):
         return [segment_a, segment_b, segment_c]
 
     @patch('sam_parser.SamParser._fetch')
-    def test_reads(self, mock_fetcher):
+    def test_create_reads_from_sam(self, mock_fetcher):
         sam_file = "fake alignment file"
         mock_values = self.mock_fetch()
         mock_fetcher.return_value = mock_values

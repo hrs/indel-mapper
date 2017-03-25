@@ -21,3 +21,7 @@ class TestReferenceParser(unittest.TestCase):
         self.assertEqual(foo_reference.reads[0].query_name, reads[0].query_name)
         self.assertEqual(foo_reference.reads[1].query_name, reads[1].query_name)
         self.assertEqual(len(bar_reference.reads), 0)
+        self.assertEqual(foo_reference.name, 'foo')
+        self.assertEqual(foo_reference.n20, 'CAT')
+        self.assertEqual(foo_reference.sequence, 'CCAATTGG')
+        self.assertEqual(foo_reference.pam, 'NGG')

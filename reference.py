@@ -40,7 +40,7 @@ class Reference(object):
         if self.n20 in self.sequence:
             low_index, high_index = self._get_low_high_n20_index(self.n20)
 
-        if self.reverse_complement_n20 in self.sequence:
+        elif self.reverse_complement_n20 in self.sequence:
             low_index, high_index = self._get_low_high_n20_index(self.reverse_complement_n20)
 
         if self.is_ngg():
@@ -54,6 +54,18 @@ class Reference(object):
         else:
             return self.n20_pam_index() + 3
 
+    def pam_index(self):
+        if self.is_ngg():
+            return self.n20_pam_index() + 3
+        else:
+            return self.n20_pam_index() - 3
+
+    def n20_index(self):
+        if self.is_ngg():
+            return self.n20_pam_index() - len(self.n20)
+        else:
+            return self.n20_pam_index() + len(self.n20)
+
     def sorted_reads(self):
         # sorts reads based on their indels' minimum distance from cutsite
         reads_with_indels = [read for read in self.reads if len(read.indels) > 0]
@@ -66,4 +78,19 @@ class Reference(object):
     def distance_to_cutsite(self, indel):
         if indel.envelope_cutsite(self.cutsite_index()):
             return 0
-        return min([abs(self.cutsite_index() - indel.start_index), abs(self.cutsite_index() - indel.end_index)])
+
+        if indel.end_index < self.cutsite_index():
+            return indel.end_index - self.cutsite_index()
+        else:
+            return indel.start_index - self.cutsite_index()
+
+    def _min_abs_indel_dist(self, read):
+        return min([abs(self.distance_to_cutsite(i)) for i in read.indels])
+
+    def reads_with_indels_near_the_cutsite(self, padding=2):
+        # returns the reads with indels near the cutsite
+        reads_with_indels = [read for read in self.reads if len(read.indels) > 0]
+        if len(reads_with_indels) > 0:
+            return [read for read in reads_with_indels if self._min_abs_indel_dist(read) <= padding]
+        else:
+            return []

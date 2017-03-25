@@ -12,5 +12,6 @@ def run():
     filtered_references = [r for r in references if r.is_valid()]
 
     reference_presenter = Presenter(filtered_references)
-    reference_presenter.present_reads_with_indels_near_cutsite()
+    #reference_presenter.present_reads_with_indels()
+    reference_presenter.present()
 run()

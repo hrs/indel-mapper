@@ -87,7 +87,7 @@ class Reference(object):
     def _min_abs_indel_dist(self, read):
         return min([abs(self.distance_to_cutsite(i)) for i in read.indels])
 
-    def reads_with_indels_near_the_cutsite(self, padding=2):
+    def reads_with_indels_near_the_cutsite(self, padding=3):
         # returns the reads with indels near the cutsite
         reads_with_indels = [read for read in self.reads if len(read.indels) > 0]
         if len(reads_with_indels) > 0:

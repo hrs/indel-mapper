@@ -17,6 +17,74 @@ class SequenceTally(object):
                 "ref : {}".format(self.reference_sequence_presentation),
                 "read: {}".format(self.read_sequence_presentation)]
 
+class ReadReferenceRelationship(object):
+
+    def __init__(self, aligned_pair_index, aligned_pairs, reference_sequence, read_sequence, pam_index, n20_index, is_ngg):
+        self.aligned_pair_index = aligned_pair_index
+        self.aligned_pairs = aligned_pairs
+        self.sequence_indexes = aligned_pairs[self.aligned_pair_index]
+        self.read_index = self.sequence_indexes[0]
+        self.reference_index = self.sequence_indexes[1]
+        self.reference_sequence = reference_sequence
+        self.read_sequence = read_sequence
+        self.pam_index = pam_index
+        self.n20_index = n20_index
+        self.is_ngg = is_ngg
+
+    def is_insertion(self):
+        return self._is_insertion(self.sequence_indexes)
+
+    def is_deletion(self):
+        return self._is_deletion(self.sequence_indexes)
+
+    def _is_indel(self):
+        return self.is_insertion() or self.is_deletion()
+
+    def is_mismatch(self):
+        if not self._is_indel():
+            read_base = self.read_sequence[self.read_index]
+            reference_base = self.reference_sequence[self.reference_index]
+            return self._is_mismatch(read_base, reference_base)
+        return True
+
+    def is_between_pam_and_n20(self):
+        if not self.is_ngg:
+            return self.reference_index >= min([self.n20_index, self.pam_index]) and \
+                self.reference_index < max([self.n20_index, self.pam_index])
+        else:
+            return self.reference_index >= min([self.n20_index+1, self.pam_index+1]) and \
+                self.reference_index < max([self.n20_index+1, self.pam_index+1])
+
+    def next_to_mismatch_or_indel(self):
+        return self._previous_is_indel_or_mismatch() or self._next_is_indel_or_mismatch()
+
+    def _previous_is_indel_or_mismatch(self):
+        prev_index = self.aligned_pair_index - 1
+        if prev_index >= 0:
+            prev_aligned_pair = self.aligned_pairs[prev_index]
+            return self._is_insertion(prev_aligned_pair) or \
+                self._is_deletion(prev_aligned_pair) or \
+                self._is_mismatch(self.read_sequence[prev_aligned_pair[0]], self.reference_sequence[prev_aligned_pair[1]])
+        return False
+
+    def _next_is_indel_or_mismatch(self):
+        next_index = self.aligned_pair_index + 1
+        if next_index < len(self.aligned_pairs):
+            next_aligned_pair = self.aligned_pairs[next_index]
+            return self._is_insertion(next_aligned_pair) or \
+                self._is_deletion(next_aligned_pair) or \
+                self._is_mismatch(self.read_sequence[next_aligned_pair[0]], self.reference_sequence[next_aligned_pair[1]])
+        return False
+
+    def _is_insertion(self, aligned_pair):
+        return aligned_pair[1] is None
+
+    def _is_deletion(self, aligned_pair):
+        return aligned_pair[0] is None
+
+    def _is_mismatch(self, read_base, reference_base):
+        return read_base != reference_base
+
 class Presenter(object):
 
     def __init__(self, references):
@@ -81,63 +149,32 @@ class Presenter(object):
         for aligned_pair_index, sequence_indexes in enumerate(aligned_pairs):
             read_index, reference_index = sequence_indexes
 
-            if self._is_insertion(sequence_indexes):
+            relationship = ReadReferenceRelationship(aligned_pair_index,
+                                                     aligned_pairs,
+                                                     reference_sequence,
+                                                     read_sequence,
+                                                     reference.pam_index(),
+                                                     reference.n20_index(),
+                                                     reference.is_ngg())
+
+            if relationship.is_insertion():
                 reference_presentation.append(indel_marker)
                 read_presentation.append(read_sequence[read_index])
-            elif self._is_deletion(sequence_indexes):
+            elif relationship.is_deletion():
                 reference_presentation.append(reference_sequence[reference_index])
                 read_presentation.append(indel_marker)
             else:
                 read_base = read_sequence[read_index]
                 reference_base = reference_sequence[reference_index]
-                if self._is_mismatch(read_base, reference_base) or \
-                   self._is_between_pam_and_n20(reference, reference_index) or \
-                   self._next_to_mismatch_or_indel(aligned_pair_index, aligned_pairs, reference_sequence, read_sequence):
+                if relationship.is_mismatch() or \
+                   relationship.is_between_pam_and_n20() or \
+                   relationship.next_to_mismatch_or_indel():
                     reference_presentation.append(reference_base)
                     read_presentation.append(read_base)
                 else:
                     reference_presentation.append(match_marker)
                     read_presentation.append(match_marker)
         return reference_presentation, read_presentation
-
-    def _next_to_mismatch_or_indel(self, aligned_pair_index, aligned_pairs, reference_sequence, read_sequence):
-        return self._previous_is_indel_or_mismatch(aligned_pair_index, aligned_pairs, reference_sequence, read_sequence) or \
-            self._next_is_indel_or_mismatch(aligned_pair_index, aligned_pairs, reference_sequence, read_sequence)
-
-    def _previous_is_indel_or_mismatch(self, aligned_pair_index, aligned_pairs, reference_sequence, read_sequence):
-        prev_index = aligned_pair_index - 1
-        if prev_index >= 0:
-            prev_aligned_pairs = aligned_pairs[prev_index]
-            return self._is_insertion(prev_aligned_pairs) or \
-                self._is_deletion(prev_aligned_pairs) or \
-                self._is_mismatch(read_sequence[prev_aligned_pairs[0]], reference_sequence[prev_aligned_pairs[1]])
-        return False
-
-    def _next_is_indel_or_mismatch(self, aligned_pair_index, aligned_pairs, reference_sequence, read_sequence):
-        next_index = aligned_pair_index - 1
-        if next_index < len(aligned_pairs):
-            next_aligned_pairs = aligned_pairs[next_index]
-            return self._is_insertion(next_aligned_pairs) or \
-                self._is_deletion(next_aligned_pairs) or \
-                self._is_mismatch(read_sequence[next_aligned_pairs[0]], reference_sequence[next_aligned_pairs[1]])
-        return False
-
-    def _is_between_pam_and_n20(self, reference, reference_index):
-        n20_index = reference.n20_index()
-        pam_index = reference.pam_index()
-        if not reference.is_ngg():
-            return reference_index >= min([n20_index, pam_index]) and reference_index < max([n20_index, pam_index])
-        else:
-            return reference_index >= min([n20_index+1, pam_index+1]) and reference_index < max([n20_index+1, pam_index+1])
-
-    def _is_mismatch(self, read_base, reference_base):
-        return read_base != reference_base
-
-    def _is_insertion(self, sequence_indexes):
-        return sequence_indexes[1] is None
-
-    def _is_deletion(self, sequence_indexes):
-        return sequence_indexes[0] is None
 
     def denote_cas9_sites(self, reference_presentation, read_presentation, reference, read):
         # denotes the positions of the cutsite, the n20, and the pam
@@ -193,97 +230,3 @@ class Presenter(object):
                 presentation_n20_index = aligned_pair_index
 
         return presentation_cutsite_index, presentation_pam_index, presentation_n20_pam_index, presentation_n20_index
-
-    def present_sequence2(self, reference, read):
-        aligned_pairs = read.aligned_pairs
-        reference_sequence = reference.sequence
-        read_sequence = read.query_sequence
-
-        reference_presentation = ''
-        read_presentation = ''
-
-        cutsite_index = reference.cutsite_index()
-        pam_index = reference.pam_index()
-        n20_pam_index = reference.n20_pam_index()
-        n20_index = reference.n20_index()
-
-        for aligned_pair_index, sequence_indexes in enumerate(aligned_pairs):
-            read_index, reference_index = sequence_indexes
-
-            if not reference.is_ngg():
-                if reference_index == cutsite_index:
-                    read_presentation += "||"
-                    reference_presentation += "||"
-                if reference_index == pam_index:
-                    read_presentation += "|"
-                    reference_presentation += "|"
-                if reference_index == n20_pam_index:
-                    read_presentation += "|"
-                    reference_presentation += "|"
-                if reference_index == n20_index:
-                    read_presentation += "|"
-                    reference_presentation += "|"
-
-            if read_index is not None and reference_index is None:
-                read_presentation += read_sequence[read_index]
-                reference_presentation += '_'
-            elif read_index is None and reference_index is not None:
-                read_presentation += "_"
-                reference_presentation += reference_sequence[reference_index]
-            else:
-                if self.previous_is_indel_and_current_is_not_indel(aligned_pairs, aligned_pair_index):
-                    read_presentation += read_sequence[read_index]
-                    reference_presentation += reference_sequence[reference_index]
-                elif self.current_is_not_indel_and_next_is_indel(aligned_pairs, aligned_pair_index):
-                    read_presentation += read_sequence[read_index]
-                    reference_presentation += reference_sequence[reference_index]
-                else:
-                    if not reference.is_ngg() and reference_index >= min([n20_index, pam_index]) and reference_index < max([n20_index, pam_index]):
-                        read_presentation += read_sequence[read_index]
-                        reference_presentation += reference_sequence[reference_index]
-                    elif reference.is_ngg() and reference_index >= min([n20_index+1, pam_index+1]) and reference_index < max([n20_index+1, pam_index+1]):
-                        read_presentation += read_sequence[read_index]
-                        reference_presentation += reference_sequence[reference_index]
-                    else:
-                        if read_sequence[read_index] != reference_sequence[reference_index]:
-                            read_presentation += read_sequence[read_index]
-                            reference_presentation += reference_sequence[reference_index]
-                        else:
-                            read_presentation += "-"
-                            reference_presentation += "-"
-
-            if reference.is_ngg():
-                if reference_index == cutsite_index:
-                    read_presentation += "||"
-                    reference_presentation += "||"
-                if reference_index == pam_index:
-                    read_presentation += "|"
-                    reference_presentation += "|"
-                if reference_index == n20_pam_index:
-                    read_presentation += "|"
-                    reference_presentation += "|"
-                if reference_index == n20_index:
-                    read_presentation += "|"
-                    reference_presentation += "|"
-
-        return reference_presentation, read_presentation
-
-    def previous_is_indel_and_current_is_not_indel(self, aligned_pairs, index):
-        prev_index = index - 1
-        if prev_index >= 0:
-            return self.is_indel(aligned_pairs[prev_index]) and self.is_not_indel(aligned_pairs[index])
-        return False
-
-    def current_is_not_indel_and_next_is_indel(self, aligned_pairs, index):
-        next_index = index + 1
-        if next_index < len(aligned_pairs):
-            return self.is_indel(aligned_pairs[next_index]) and self.is_not_indel(aligned_pairs[index])
-        return False
-
-    def is_indel(self, pair):
-        read_index, reference_index = pair
-        return (read_index is None) or (reference_index is None)
-
-    def is_not_indel(self, pair):
-        read_index, reference_index = pair
-        return (read_index is not None) and (reference_index is not None)

@@ -85,6 +85,68 @@ class ReadReferenceRelationship(object):
     def _is_mismatch(self, read_base, reference_base):
         return read_base != reference_base
 
+class DenotationIndex(object):
+
+    def __init__(self, index, cutsite=False):
+        self.index = index
+        self.cutsite = cutsite
+        self.representation = self._representation()
+
+    def _representation(self):
+        if self.cutsite:
+            return "||"
+        else:
+            return "|"
+
+class Cas9Denotations(object):
+
+    def __init__(self, cutsite_index, pam_index, n20_pam_index, n20_index, aligned_pairs, is_ngg):
+        self.cutsite_index = cutsite_index
+        self.pam_index = pam_index
+        self.n20_pam_index = n20_pam_index
+        self.n20_index = n20_index
+        self.aligned_pairs = aligned_pairs
+        self.is_ngg = is_ngg
+
+    def _get_denotation_indexes(self):
+        denotation_indexes = []
+        for aligned_pair_index, sequence_indexes in enumerate(self.aligned_pairs):
+            _, reference_index = sequence_indexes
+            if reference_index == self.cutsite_index:
+                denotation_indexes.append(DenotationIndex(aligned_pair_index,True))
+            elif reference_index == self.pam_index or reference_index == self.n20_pam_index or reference_index == self.n20_index:
+                denotation_indexes.append(DenotationIndex(aligned_pair_index))
+
+        return denotation_indexes
+
+    def apply_to_presentation(self, reference_presentation_array, read_presentation_array):
+
+        reference_presentation_string = ''
+        read_presentation_string = ''
+        denotation_indexes = self._get_denotation_indexes()
+        filtered = [index_object for index_object in denotation_indexes if index_object.index is not None]
+        if len(filtered) > 0:
+            for index, value in enumerate(reference_presentation_array):
+                if not self.is_ngg:
+                    for denotation in filtered:
+                        if index == denotation.index:
+                            reference_presentation_string += denotation.representation
+                            read_presentation_string += denotation.representation
+
+                reference_presentation_string += value
+                read_presentation_string += read_presentation_array[index]
+
+                if self.is_ngg:
+                    for denotation in filtered:
+                        if index == denotation.index:
+                            reference_presentation_string += denotation.representation
+                            read_presentation_string += denotation.representation
+        else:
+            reference_presentation_string = ''.join(reference_representation_array)
+            read_presentation_string = ''.join(read_representation_array)
+
+        return reference_presentation_string, read_presentation_string
+
 class Presenter(object):
 
     def __init__(self, references):
@@ -179,54 +241,11 @@ class Presenter(object):
     def denote_cas9_sites(self, reference_presentation, read_presentation, reference, read):
         # denotes the positions of the cutsite, the n20, and the pam
 
-        modified_reference_presentation = reference_presentation
-        modified_read_presentation = read_presentation
-
         cutsite_index = reference.cutsite_index()
         pam_index = reference.pam_index()
         n20_pam_index = reference.n20_pam_index()
         n20_index = reference.n20_index()
 
-        present_cutsite_index, present_pam_index, present_n20_pam_index, present_n20_index = self.get_presentation_indexes(
-            read.aligned_pairs, cutsite_index, pam_index, n20_pam_index, n20_index)
+        denotations = Cas9Denotations(cutsite_index, pam_index, n20_pam_index, n20_index, read.aligned_pairs, reference.is_ngg())
 
-        border_marker = "|"
-        cutsite_marker = "||"
-
-        borders =  [present_pam_index, present_n20_pam_index, present_n20_index]
-        filtered_borders = [border for border in borders if border is not None]
-
-        if not reference.is_ngg():
-            for each_index in filtered_borders:
-                modified_reference_presentation.insert(each_index, border_marker)
-                modified_read_presentation.insert(each_index, border_marker)
-            if present_cutsite_index is not None:
-                modified_reference_presentation.insert(present_cutsite_index, cutsite_marker)
-                modified_read_presentation.insert(present_cutsite_index, cutsite_marker)
-        else:
-            for each_index in filtered_borders:
-                modified_reference_presentation.insert(each_index + 1, border_marker)
-                modified_read_presentation.insert(each_index + 1, border_marker)
-            if present_cutsite_index is not None:
-                modified_reference_presentation.insert(present_cutsite_index + 1, cutsite_marker)
-                modified_read_presentation.insert(present_cutsite_index + 1, cutsite_marker)
-
-        return ''.join(modified_reference_presentation), ''.join(modified_read_presentation)
-
-    def get_presentation_indexes(self, aligned_pairs, cutsite_index, pam_index, n20_pam_index, n20_index):
-        presentation_cutsite_index = None
-        presentation_pam_index = None
-        presentation_n20_pam_index = None
-        presentation_n20_index = None
-        for aligned_pair_index, sequence_indexes in enumerate(aligned_pairs):
-            _, reference_index = sequence_indexes
-            if reference_index == cutsite_index:
-                presentation_cutsite_index = aligned_pair_index
-            elif reference_index == pam_index:
-                presentation_pam_index = aligned_pair_index
-            elif reference_index == n20_pam_index:
-                presentation_n20_pam_index = aligned_pair_index
-            elif reference_index == n20_index:
-                presentation_n20_index = aligned_pair_index
-
-        return presentation_cutsite_index, presentation_pam_index, presentation_n20_pam_index, presentation_n20_index
+        return denotations.apply_to_presentation(reference_presentation, read_presentation)

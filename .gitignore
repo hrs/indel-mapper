@@ -1,3 +1,5 @@
 *.pyc
 __pycache__/*
 .#*
+indel-mapper/*
+indel-mapper-lib/__pycache__/*

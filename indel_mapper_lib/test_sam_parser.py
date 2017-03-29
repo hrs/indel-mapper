@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-from sam_parser import SamParser
+from .sam_parser import SamParser
 
 class TestSamParser(unittest.TestCase):
 
@@ -41,7 +41,7 @@ class TestSamParser(unittest.TestCase):
         sam_file = "fake alignment file"
         mock_values = self.mock_fetch()
         mock_fetcher.return_value = mock_values
-        reads = SamParser(sam_file).reads()
+        reads = sam_parser.SamParser(sam_file).reads()
 
         self.assertEqual(len(reads), 1)
         self.assertEqual(reads[0].query_name, mock_values[-1].query_name)

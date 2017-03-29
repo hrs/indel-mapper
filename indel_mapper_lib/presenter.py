@@ -8,14 +8,11 @@ class SequenceTally(object):
     def add_read(self, read_name):
         self.read_names.append(read_name)
 
-    def _get_count(self):
+    def count(self):
         return len(self.read_names)
 
-    def display_values(self):
-        return ["count: {}".format(self._get_count()),
-                "reads: {}".format(', '.join(self.read_names)),
-                "ref : {}".format(self.reference_sequence_presentation),
-                "read: {}".format(self.read_sequence_presentation)]
+    def read_names_as_string(self):
+        return ', '.join(self.read_names)
 
 class ReadReferenceRelationship(object):
 
@@ -147,31 +144,23 @@ class Cas9Denotations(object):
 
         return reference_presentation_string, read_presentation_string
 
-class Presenter(object):
+class ReferencePresenter(object):
 
-    def __init__(self, references):
-        self.references = references
+    def __init__(self, reference):
+        self.reference = reference
+        self.tallies = self._tally_sequences(reference).values()
 
-    def present(self):
-        return [self.display_indels_near_cutsite(reference) for reference in self.references if len(reference.reads_with_indels_near_the_cutsite()) > 0]
+    def name(self):
+        return self.reference.name
 
-    def _present_name(self, reference):
-        return "name: {}".format(reference.name)
+    def sequence(self):
+        return self.reference.sequence
 
-    def _present_reference(self, reference):
-        return "sequence: {}".format(reference.sequence)
+    def n20(self):
+        return self.reference.n20
 
-    def _present_n20(self, reference):
-        return "n20: {}".format(reference.n20)
-
-    def _present_pam(self, reference):
-        return "pam: {}".format(reference.pam)
-
-    def display_indels_near_cutsite(self, reference):
-        return '\n'.join([self._present_name(reference),
-                          self._present_reference(reference),
-                          self._present_n20(reference),
-                          self._present_pam(reference)] + self._tallies_as_display_values(reference))
+    def pam(self):
+        return self.reference.pam
 
     def _tally_sequences(self, reference):
         tallies = {}
@@ -182,13 +171,6 @@ class Presenter(object):
             else:
                 tallies[read_presentation] = SequenceTally(read_presentation, reference_presentation, read.query_name)
         return tallies
-
-    def _tallies_as_display_values(self, reference):
-        tallies = self._tally_sequences(reference)
-        display_values = []
-        for read_presentation, tally in tallies.items():
-            display_values += tally.display_values()
-        return display_values
 
     def present_sequence(self, reference, read):
 
@@ -249,3 +231,12 @@ class Presenter(object):
         denotations = Cas9Denotations(cutsite_index, pam_index, n20_pam_index, n20_index, read.aligned_pairs, reference.is_ngg())
 
         return denotations.apply_to_presentation(reference_presentation, read_presentation)
+
+
+class Presenter(object):
+
+    def __init__(self, references):
+        self.references = references
+
+    def present(self):
+        return [ReferencePresenter(reference) for reference in self.references if len(reference.reads_with_indels_near_the_cutsite()) > 0]

@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request, flash
 from flask_uploads import (UploadSet, configure_uploads, UploadNotAllowed)
-from indel_mapper_lib import SamParser
-from indel_mapper_lib import ReferenceParser
-from indel_mapper_lib import Presenter
+from indel_mapper_lib.sam_parser import SamParser
+from indel_mapper_lib.reference_parser import ReferenceParser
+from indel_mapper_lib.presenter import Presenter
 import pysam
 
 # Flask
@@ -42,20 +42,20 @@ def index():
                         reference_full_path = uploaded_reference_files.path(reference_file)
                         results = process_data(alignment_full_path, reference_full_path)
                         return render_template("index.html", results=results)
-                    except:
-                        flash("Error processing.")
-                        return render_template("index.html", results=['1'])
-    return render_template("index.html", results=['2','3'])
+                    except Exception as e:
+                        flash("Error processing." + str(e))
+                        return render_template("index.html", results=[])
+    return render_template("index.html", results=[])
 
 def process_data(sam_file, csv_file):
     reads = SamParser(pysam.AlignmentFile(sam_file, "rb")).reads()
     references = ReferenceParser(open(csv_file), reads).references()
 
-    filtered_references = [r for r in references if r.is_valid()]#r.name == "AC4433"]#r.is_valid()]
+    filtered_references = [r for r in references if r.is_valid()]
 
-    reference_presenter = Presenter(filtered_references)
-    return reference_presenter.present()
+    presenter_results = Presenter(filtered_references)
 
+    return presenter_results.present()
 
 
 if __name__ == "__main__":

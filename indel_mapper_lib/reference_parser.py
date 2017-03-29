@@ -1,4 +1,4 @@
-from .reference import Reference
+from indel_mapper_lib.reference import Reference
 
 class ReferenceParser():
 

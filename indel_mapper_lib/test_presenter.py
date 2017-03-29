@@ -19,13 +19,10 @@ class TestSequenceTally(unittest.TestCase):
         tally.add_read("bar")
         tally.add_read("baz")
 
-        display_values = tally.display_values()
-
-        self.assertEqual(len(display_values), 4)
-        self.assertEqual(display_values[0], "count: 3")
-        self.assertEqual(display_values[1], "reads: foo, bar, baz")
-        self.assertEqual(display_values[2], "ref : {}".format(reference_presentation))
-        self.assertEqual(display_values[3], "read: {}".format(read_presentation))
+        self.assertEqual(tally.read_names_as_string(), "foo, bar, baz")
+        self.assertEqual(tally.count(), 3)
+        self.assertEqual(tally.reference_sequence_presentation, reference_presentation)
+        self.assertEqual(tally.read_sequence_presentation, read_presentation)
 
 class TestReadReferenceRelationship(unittest.TestCase):
 

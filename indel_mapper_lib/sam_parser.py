@@ -1,6 +1,4 @@
-# reads = SamParser(pysam.AlignmentFile(my_file_name, "rb")).reads()
-
-from .read import Read
+from indel_mapper_lib.read import Read
 
 class SamParser(object):
 

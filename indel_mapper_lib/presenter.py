@@ -153,7 +153,7 @@ class Presenter(object):
         self.references = references
 
     def present(self):
-        return '\n'.join([self.display_indels_near_cutsite(reference) for reference in self.references if len(reference.reads_with_indels_near_the_cutsite()) > 0])
+        return [self.display_indels_near_cutsite(reference) for reference in self.references if len(reference.reads_with_indels_near_the_cutsite()) > 0]
 
     def _present_name(self, reference):
         return "name: {}".format(reference.name)

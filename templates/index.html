@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+  <head>
+	<title>Indel Mapper</title>
+  </head>
+
+  <body>
+	<h1 id=title>Indel Mapper</h1>
+
+	{% with flashes = get_flashed_messages() %}
+    {% if flashes %}
+    <div class=flashes>
+        <ul>
+            {% for f in flashes %}
+            <li>{{ f }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% block body %}
+    {% endblock body %}
+
+	<form method="POST" enctype="multipart/form-data">
+
+	  <div>
+		<label for="alignment">Alignment SAM File</label>
+	  </div>
+	  <input name="alignment" type="file">
+
+	  <div>
+		<label for="reference">Reference CSV File</label>
+	  </div>
+	  <input name="reference" type="file">
+
+	  <input type="submit" value="Submit">
+	</form>
+
+	{% for result in results %}
+	<p>{{ result }}</p>
+	{% endfor %}
+
+  </body>
+
+</html>

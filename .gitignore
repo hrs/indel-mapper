@@ -2,4 +2,5 @@
 __pycache__/*
 .#*
 indel-mapper/*
-indel-mapper-lib/__pycache__/*
+indel_mapper_lib/__pycache__/*
+storage/*

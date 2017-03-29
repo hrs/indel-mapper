@@ -1,4 +1,4 @@
-from indel import Indel
+from .indel import Indel
 
 class Read(object):
 

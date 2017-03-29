@@ -1,10 +1,10 @@
 import unittest
-from read import Read
-from presenter import SequenceTally
-from presenter import Presenter
-from presenter import ReadReferenceRelationship
-from presenter import DenotationIndex
-from presenter import Cas9Denotations
+from .read import Read
+from .presenter import SequenceTally
+from .presenter import Presenter
+from .presenter import ReadReferenceRelationship
+from .presenter import DenotationIndex
+from .presenter import Cas9Denotations
 
 class TestSequenceTally(unittest.TestCase):
 

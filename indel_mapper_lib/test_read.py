@@ -1,5 +1,5 @@
 import unittest
-from read import Read
+from .read import Read
 
 class TestRead(unittest.TestCase):
 

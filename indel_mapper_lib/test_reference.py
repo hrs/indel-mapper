@@ -1,7 +1,7 @@
 import unittest
-from reference import Reference
-from indel import Indel
-from read import Read
+from .reference import Reference
+from .indel import Indel
+from .read import Read
 
 class TestReference(unittest.TestCase):
 

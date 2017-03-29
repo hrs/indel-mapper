@@ -1,6 +1,6 @@
 import unittest
-from reference_parser import ReferenceParser
-from read import Read
+from .reference_parser import ReferenceParser
+from .read import Read
 
 class TestReferenceParser(unittest.TestCase):
 

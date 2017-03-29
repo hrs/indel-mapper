@@ -1,5 +1,5 @@
 import unittest
-from indel import Indel
+from .indel import Indel
 
 class TestIndel(unittest.TestCase):
 

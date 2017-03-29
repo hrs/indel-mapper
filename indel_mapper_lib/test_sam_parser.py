@@ -36,12 +36,12 @@ class TestSamParser(unittest.TestCase):
 
         return [segment_a, segment_b, segment_c]
 
-    @patch('sam_parser.SamParser._fetch')
+    @patch('indel_mapper_lib.sam_parser.SamParser._fetch')
     def test_create_reads_from_sam(self, mock_fetcher):
         sam_file = "fake alignment file"
         mock_values = self.mock_fetch()
         mock_fetcher.return_value = mock_values
-        reads = sam_parser.SamParser(sam_file).reads()
+        reads = SamParser(sam_file).reads()
 
         self.assertEqual(len(reads), 1)
         self.assertEqual(reads[0].query_name, mock_values[-1].query_name)

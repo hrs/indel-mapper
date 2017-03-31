@@ -55,3 +55,10 @@ class TestRead(unittest.TestCase):
         self.assertEqual(indels_b[1].length, 2)
         self.assertEqual(indels_b[1].is_deletion, False),
         self.assertEqual(indels_b[1].is_insertion, True),
+
+    def test_valid_indels(self):
+        reference_positions_a = [None,None,None,0,1,2]
+        read_a = Read("", "", reference_positions_a, "", ())
+        indels_a = read_a.valid_indels
+
+        self.assertEqual(len(indels_a), 0)

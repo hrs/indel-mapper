@@ -43,6 +43,7 @@ def index():
                         results = process_data(alignment_full_path, reference_full_path)
                         return render_template("index.html", results=results)
                     except Exception as e:
+                        print(e)
                         flash("Error processing." + str(e))
                         return render_template("index.html", results=[])
     return render_template("index.html", results=[])

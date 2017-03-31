@@ -9,6 +9,7 @@ class Read(object):
         self.reference_name = reference_name
         self.reference_positions = reference_positions
         self.indels = self._compute_indels()
+        self.valid_indels = self._valid_indels()
 
     def _compute_indels(self):
         indels = []
@@ -38,3 +39,6 @@ class Read(object):
             prev_reference_index = idx
 
         return indels
+
+    def _valid_indels(self):
+        return [indel for indel in self.indels if (indel.start_index is not None and indel.end_index is not None)]

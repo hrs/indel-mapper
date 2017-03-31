@@ -79,35 +79,6 @@ class TestReference(unittest.TestCase):
         self.assertEqual(long_reference.pam_index(), 148)
         self.assertEqual(long_reference.n20_index(), 126)
 
-    def test_sorted_reads(self):
-        n20 = "aaaatttc"
-        sequence = "tactactacaaaatttcnggt"
-        pam = "ngg"
-
-        reference_positions_a = [8,None,None,None,9,10,11,None,None,None,None,12,13,14]
-        read_a = Read("a", "", reference_positions_a, "", ())
-
-        reference_positions_b = [10,15]
-        read_b = Read("b", "", reference_positions_b, "", ())
-
-        reference_positions_c = [10,11,12,13,14]
-        read_c = Read("c", "", reference_positions_c, "", ())
-
-        reference_positions_d = [13,None,None,None,None,14]
-        read_d = Read("d", "", reference_positions_d, "", ())
-
-        reference_positions_e = [18,20]
-        read_e = Read("e", "", reference_positions_e, "", ())
-
-        reads = [read_a, read_b, read_c, read_d, read_e]
-
-        ngg_reference = Reference("", n20, sequence, pam, reads)
-
-        sorted_reads = ngg_reference.sorted_reads()
-
-        self.assertEqual(len(sorted_reads), 4)
-        self.assertEqual(" ".join([read.query_name for read in sorted_reads]), "a b d e")
-
     def test_distance_to_cutsite(self):
         n20 = "aaaatttc"
         sequence = "tactactacaaaatttcnggt"
@@ -145,7 +116,10 @@ class TestReference(unittest.TestCase):
         reference_positions_e = [18,20]
         read_e = Read("e", "", reference_positions_e, "", ())
 
-        reads = [read_a, read_b, read_c, read_d, read_e]
+        reference_positions_f = [None, None, None, 0, 1, 2]
+        read_f = Read("f", "", reference_positions_f, "", ())
+
+        reads = [read_a, read_b, read_c, read_d, read_e, read_f]
 
         ngg_reference = Reference("", n20, sequence, pam, reads)
 

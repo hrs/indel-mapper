@@ -66,16 +66,11 @@ class Reference(object):
         else:
             return self.n20_pam_index() + len(self.n20)
 
-    def sorted_reads(self):
-        # sorts reads based on their indels' minimum distance from cutsite
-        reads_with_indels = [read for read in self.reads if len(read.indels) > 0]
-        reads_with_indels.sort(key=lambda x: self._min_indel_dist(x))
-        return reads_with_indels
-
     def _min_indel_dist(self, read):
         return min([self.distance_to_cutsite(i) for i in read.indels])
 
     def distance_to_cutsite(self, indel):
+
         if indel.envelope_cutsite(self.cutsite_index()):
             return 0
 
@@ -85,11 +80,11 @@ class Reference(object):
             return indel.start_index - self.cutsite_index()
 
     def _min_abs_indel_dist(self, read):
-        return min([abs(self.distance_to_cutsite(i)) for i in read.indels])
+        return min([abs(self.distance_to_cutsite(i)) for i in read.valid_indels])
 
     def reads_with_indels_near_the_cutsite(self, padding=3):
         # returns the reads with indels near the cutsite
-        reads_with_indels = [read for read in self.reads if len(read.indels) > 0]
+        reads_with_indels = [read for read in self.reads if len(read.valid_indels) > 0]
         if len(reads_with_indels) > 0:
             return [read for read in reads_with_indels if self._min_abs_indel_dist(read) <= padding]
         else:

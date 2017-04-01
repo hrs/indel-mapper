@@ -25,7 +25,7 @@ def index():
             flash("The alignment file must be a SAM file.")
         else:
             try:
-                results = compute_indels_near_cutsite(alignment, reference)
+                results = compute_indels_near_cutsite(alignment_file, reference_file)
                 return render_template("index.html", results=results)
             except Exception as e:
                 print(e)

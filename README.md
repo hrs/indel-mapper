@@ -20,3 +20,7 @@ Deploy
 ```
 git push heroku master
 ```
+
+## License
+
+Indel Mapper is licensed under the GNU General Public License.

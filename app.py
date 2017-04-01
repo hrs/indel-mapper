@@ -40,21 +40,19 @@ def index():
                     try:
                         alignment_full_path = uploaded_alignment_files.path(alignment_file)
                         reference_full_path = uploaded_reference_files.path(reference_file)
-                        results = process_data(alignment_full_path, reference_full_path)
+                        results = compute_indels_near_cutsite(alignment_full_path, reference_full_path)
                         return render_template("index.html", results=results)
                     except Exception as e:
                         print(e)
-                        flash("Error processing." + str(e))
+                        flash("Error processing.")
                         return render_template("index.html", results=[])
     return render_template("index.html", results=[])
 
-def process_data(sam_file, csv_file):
+def compute_indels_near_cutsite(sam_file, csv_file):
     reads = SamParser(pysam.AlignmentFile(sam_file, "rb")).reads()
     references = ReferenceParser(open(csv_file), reads).references()
 
-    filtered_references = [r for r in references if r.is_valid()]
-
-    presenter_results = Presenter(filtered_references)
+    presenter_results = Presenter([reference for reference in references if reference.is_valid])
 
     return presenter_results.present()
 

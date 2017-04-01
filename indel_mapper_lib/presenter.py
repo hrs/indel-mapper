@@ -1,18 +1,23 @@
+import re
+
 class SequenceTally(object):
+
+    def __init__(self, cutsite_region_representation, sequence_relationship_presentation):
+        self.cutsite_region_representation = cutsite_region_representation
+        self.presentations = [sequence_relationship_presentation]
+
+    def add_read(self, presentation):
+        self.presentations.append(presentation)
+
+    def count(self):
+        return len(self.presentations)
+
+class SequenceRelationshipPresentation(object):
 
     def __init__(self, read_sequence_presentation, reference_sequence_presentation, read_name):
         self.read_sequence_presentation = read_sequence_presentation
         self.reference_sequence_presentation = reference_sequence_presentation
-        self.read_names = [read_name]
-
-    def add_read(self, read_name):
-        self.read_names.append(read_name)
-
-    def count(self):
-        return len(self.read_names)
-
-    def read_names_as_string(self):
-        return ', '.join(self.read_names)
+        self.read_name = read_name
 
 class ReadReferenceRelationship(object):
 
@@ -104,6 +109,9 @@ class Cas9Denotations(object):
         self.n20_index = n20_index
         self.aligned_pairs = aligned_pairs
         self.is_ngg = is_ngg
+        self.denotation_indexes = self._get_denotation_indexes()
+        self.filtered_denotation_indexes = [index_object for index_object in self.denotation_indexes if index_object.index is not None]
+
 
     def _get_denotation_indexes(self):
         denotation_indexes = []
@@ -120,12 +128,10 @@ class Cas9Denotations(object):
 
         reference_presentation_string = ''
         read_presentation_string = ''
-        denotation_indexes = self._get_denotation_indexes()
-        filtered = [index_object for index_object in denotation_indexes if index_object.index is not None]
-        if len(filtered) > 0:
+        if len(self.filtered_denotation_indexes) > 0:
             for index, value in enumerate(reference_presentation_array):
                 if not self.is_ngg:
-                    for denotation in filtered:
+                    for denotation in self.filtered_denotation_indexes:
                         if index == denotation.index:
                             reference_presentation_string += denotation.representation
                             read_presentation_string += denotation.representation
@@ -134,13 +140,13 @@ class Cas9Denotations(object):
                 read_presentation_string += read_presentation_array[index]
 
                 if self.is_ngg:
-                    for denotation in filtered:
+                    for denotation in self.filtered_denotation_indexes:
                         if index == denotation.index:
                             reference_presentation_string += denotation.representation
                             read_presentation_string += denotation.representation
         else:
-            reference_presentation_string = ''.join(reference_representation_array)
-            read_presentation_string = ''.join(read_representation_array)
+            reference_presentation_string = ''.join(reference_presentation_array)
+            read_presentation_string = ''.join(read_presentation_array)
 
         return reference_presentation_string, read_presentation_string
 
@@ -148,7 +154,7 @@ class ReferencePresenter(object):
 
     def __init__(self, reference):
         self.reference = reference
-        self.tallies = self._tally_sequences(reference).values()
+        self.tallies = sorted(self._tally_sequences(reference).values(), key=lambda tally: tally.count(), reverse=True)
 
     def name(self):
         return self.reference.name
@@ -164,12 +170,13 @@ class ReferencePresenter(object):
 
     def _tally_sequences(self, reference):
         tallies = {}
-        for read in reference.reads_with_indels_near_the_cutsite():
-            reference_presentation, read_presentation = self.present_sequence(reference, read)
-            if read_presentation in tallies:
-                tallies[read_presentation].add_read(read.query_name)
+        for read in reference.reads_with_indels_near_the_cutsite:
+            reference_presentation, read_presentation, cutsite_region_presentation = self.present_sequence(reference, read)
+            sequence_relationship_presentation = SequenceRelationshipPresentation(read_presentation, reference_presentation, read.query_name)
+            if cutsite_region_presentation in tallies:
+                tallies[cutsite_region_presentation].add_read(sequence_relationship_presentation)
             else:
-                tallies[read_presentation] = SequenceTally(read_presentation, reference_presentation, read.query_name)
+                tallies[cutsite_region_presentation] = SequenceTally(cutsite_region_presentation, sequence_relationship_presentation)
         return tallies
 
     def present_sequence(self, reference, read):
@@ -177,7 +184,16 @@ class ReferencePresenter(object):
         reference_presentation, read_presentation = self.get_sequence_representation(reference, read)
         reference_presentation_with_sites, read_presentation_with_sites = self.denote_cas9_sites(
             reference_presentation, read_presentation, reference, read)
-        return reference_presentation_with_sites, read_presentation_with_sites
+        cas9_region_presentation = self.compute_cas9_presentation(read_presentation_with_sites)
+        return reference_presentation_with_sites, read_presentation_with_sites, cas9_region_presentation
+
+    def compute_cas9_presentation(self, read_presentation_string):
+        areas_of_interest = re.split("[-]+", read_presentation_string)
+        for area_of_interest in areas_of_interest:
+            # there should be at least one | in one of the sections
+            if "|" in area_of_interest:
+                return area_of_interest
+        return ""
 
     def get_sequence_representation(self, reference, read):
         aligned_pairs = read.aligned_pairs
@@ -189,6 +205,8 @@ class ReferencePresenter(object):
 
         match_marker = "-"
         indel_marker = "_"
+
+        cutsite_region_presentation = ''
 
         for aligned_pair_index, sequence_indexes in enumerate(aligned_pairs):
             read_index, reference_index = sequence_indexes
@@ -218,6 +236,7 @@ class ReferencePresenter(object):
                 else:
                     reference_presentation.append(match_marker)
                     read_presentation.append(match_marker)
+
         return reference_presentation, read_presentation
 
     def denote_cas9_sites(self, reference_presentation, read_presentation, reference, read):
@@ -239,4 +258,4 @@ class Presenter(object):
         self.references = references
 
     def present(self):
-        return [ReferencePresenter(reference) for reference in self.references if len(reference.reads_with_indels_near_the_cutsite()) > 0]
+        return [ReferencePresenter(reference) for reference in self.references if reference.has_reads_with_indels_near_the_cutsite]

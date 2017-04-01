@@ -1,10 +1,12 @@
 import unittest
 from .read import Read
+from .reference import Reference
 from .presenter import SequenceTally
 from .presenter import Presenter
 from .presenter import ReadReferenceRelationship
 from .presenter import DenotationIndex
 from .presenter import Cas9Denotations
+from .presenter import SequenceRelationshipPresentation
 
 class TestSequenceTally(unittest.TestCase):
 
@@ -14,15 +16,30 @@ class TestSequenceTally(unittest.TestCase):
         read_presentation = "aaat"
         read_name = "foo"
 
-        tally = SequenceTally(read_presentation, reference_presentation, read_name)
+        relationship_a = SequenceRelationshipPresentation(read_presentation, reference_presentation, "foo")
+        relationship_b = SequenceRelationshipPresentation(read_presentation, reference_presentation, "bar")
 
-        tally.add_read("bar")
-        tally.add_read("baz")
+        tally_name = "baz"
+        tally = SequenceTally(tally_name, relationship_a)
 
-        self.assertEqual(tally.read_names_as_string(), "foo, bar, baz")
-        self.assertEqual(tally.count(), 3)
-        self.assertEqual(tally.reference_sequence_presentation, reference_presentation)
-        self.assertEqual(tally.read_sequence_presentation, read_presentation)
+        tally.add_read(relationship_b)
+
+        self.assertEqual(tally.count(), 2)
+        self.assertEqual(tally.presentations[0].read_name, relationship_a.read_name)
+        self.assertEqual(tally.presentations[1].read_name, relationship_b.read_name)
+
+class TestSequenceRelationshipPresentation(object):
+
+    def test_relationship_presentation(self):
+        read_sequence = "AAA"
+        reference_sequence = "ATA"
+        read_name = "foo"
+
+        relationship_presentaiton = SequenceRelationshipPresentation(read_sequence, reference_sequence, read_name)
+
+        self.assertEqual(relationship_presentation.read_sequence_presentation, read_sequence)
+        self.assertEqual(relationship_presentation.reference_sequence_presentation, reference_sequence)
+        self.assertEqual(relationship_presentation.read_name, read_name)
 
 class TestReadReferenceRelationship(unittest.TestCase):
 
@@ -177,11 +194,40 @@ class TestCas9Denotations(unittest.TestCase):
 
         expected_reference = "GAC___G---------------------------------------------------------------------------------|TAGAGGGGCCGACGGAG||ATT|AGG|--------------------------------------------------------------------------------------------------------------------"
         expected_read = "TCCGCAG---------------------------------------------------------------------------------|TAGAGGGGCCGACGGAG||A_T|AGG|--------------------------------------------------------------------------------------------------------------------"
-
         self.assertEqual(reference_string, expected_reference)
         self.assertEqual(read_string, expected_read)
 
 class TestPresenter(unittest.TestCase):
 
-    def test_foo(self):
-        pass
+    def test_present(self):
+        references = []
+
+        n20 = "aaaatttc"
+        sequence = "tactactacaaaatttcnggt"
+        pam = "ngg"
+
+        reference_positions_a = [8,None,None,None,9,10,11,None,None,None,None,12,13,14]
+        read_a = Read("a", "", reference_positions_a, "", ())
+
+        reference_positions_b = [10,15]
+        read_b = Read("b", "", reference_positions_b, "", ())
+
+        reference_positions_c = [10,11,12,13,14]
+        read_c = Read("c", "", reference_positions_c, "", ())
+
+        reference_positions_d = [13,None,None,None,None,14]
+        read_d = Read("d", "", reference_positions_d, "", ())
+
+        reference_positions_e = [18,20]
+        read_e = Read("e", "", reference_positions_e, "", ())
+
+        reference_positions_f = [None, None, None, 0, 1, 2]
+        read_f = Read("f", "", reference_positions_f, "", ())
+
+        reads = [read_a, read_b, read_c, read_d, read_e, read_f]
+
+        ngg_reference = Reference("", n20, sequence, pam, reads)
+
+        test_p = Presenter([ngg_reference])
+
+        self.assertEqual(len(test_p.present()), 1)

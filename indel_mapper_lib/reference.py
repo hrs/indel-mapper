@@ -3,13 +3,20 @@ from Bio.Alphabet import generic_dna
 
 class Reference(object):
 
-    def __init__(self, name, n20, sequence, pam, reads):
+    def __init__(self, name, n20, sequence, pam, reads, padding=3):
         self.name = name
         self.n20 = n20.upper()
         self.sequence = sequence.upper()
         self.pam = pam.upper()
         self.reverse_complement_n20 = self._get_reverse_complement_n20()
         self.reads = reads
+        self.reads_with_indels_near_the_cutsite = []
+        self.padding = padding
+
+        # save computation
+        self.is_valid = self._compute_is_valid()
+        if self.is_valid:
+            self.reads_with_indels_near_the_cutsite = self._compute_reads_with_indels_near_the_cutsite(self.padding)
 
     def is_ngg(self):
         return self.pam == "NGG"
@@ -17,13 +24,16 @@ class Reference(object):
     def _get_reverse_complement_n20(self):
         return str(Seq(self.n20, generic_dna).reverse_complement())
 
-    def is_valid(self):
+    def _compute_is_valid(self):
         # is n20 or reverse complement of n20 in sequence
         if self.n20 in self.sequence:
             low_index, high_index = self._get_low_high_n20_index(self.n20)
 
-        if self.reverse_complement_n20 in self.sequence:
+        elif self.reverse_complement_n20 in self.sequence:
             low_index, high_index = self._get_low_high_n20_index(self.reverse_complement_n20)
+
+        else:
+            return False
 
         if self.is_ngg():
             return low_index != -1 and high_index != -1 and self.sequence[high_index+2:high_index+4] == "GG"
@@ -82,10 +92,13 @@ class Reference(object):
     def _min_abs_indel_dist(self, read):
         return min([abs(self.distance_to_cutsite(i)) for i in read.valid_indels])
 
-    def reads_with_indels_near_the_cutsite(self, padding=3):
+    def _compute_reads_with_indels_near_the_cutsite(self, padding):
         # returns the reads with indels near the cutsite
         reads_with_indels = [read for read in self.reads if len(read.valid_indels) > 0]
         if len(reads_with_indels) > 0:
             return [read for read in reads_with_indels if self._min_abs_indel_dist(read) <= padding]
         else:
             return []
+
+    def has_reads_with_indels_near_the_cutsite(self):
+        return len(self.reads_with_indels_near_the_cutsite) > 0

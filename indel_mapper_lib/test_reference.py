@@ -35,12 +35,12 @@ class TestReference(unittest.TestCase):
         rc_ngg_reference = Reference("", "atg", "ccattgg", "ngg", [])
         rc_ccn_reference = Reference("", "atg", "ccgcatt", "cgg", [])
 
-        self.assertTrue(ngg_reference.is_valid())
-        self.assertFalse(bad_ngg_reference.is_valid())
-        self.assertTrue(ccn_reference.is_valid())
-        self.assertFalse(bad_ccn_reference.is_valid())
-        self.assertTrue(rc_ngg_reference.is_valid())
-        self.assertTrue(rc_ccn_reference.is_valid())
+        self.assertTrue(ngg_reference.is_valid)
+        self.assertFalse(bad_ngg_reference.is_valid)
+        self.assertTrue(ccn_reference.is_valid)
+        self.assertFalse(bad_ccn_reference.is_valid)
+        self.assertTrue(rc_ngg_reference.is_valid)
+        self.assertTrue(rc_ccn_reference.is_valid)
 
     def test_cutsite(self):
         n20 = "aaaatttc"
@@ -121,18 +121,21 @@ class TestReference(unittest.TestCase):
 
         reads = [read_a, read_b, read_c, read_d, read_e, read_f]
 
-        ngg_reference = Reference("", n20, sequence, pam, reads)
+        ngg_reference = Reference("", n20, sequence, pam, reads, padding=1)
 
-        reads_with_indels_near_the_cutsite = ngg_reference.reads_with_indels_near_the_cutsite(padding=1)
+        reads_with_indels_near_the_cutsite = ngg_reference.reads_with_indels_near_the_cutsite
 
         self.assertEqual(len(reads_with_indels_near_the_cutsite), 3)
         self.assertEqual(" ".join([read.query_name for read in reads_with_indels_near_the_cutsite]), "a b d")
 
-        ngg_reference = Reference("", n20, sequence, pam, [read_e])
-        reads_with_indels_near_the_cutsite = ngg_reference.reads_with_indels_near_the_cutsite(padding=1)
+        ngg_reference = Reference("", n20, sequence, pam, [read_e], padding=1)
+        reads_with_indels_near_the_cutsite = ngg_reference.reads_with_indels_near_the_cutsite
 
         self.assertEqual(len(reads_with_indels_near_the_cutsite), 0)
+        self.assertFalse(ngg_reference.has_reads_with_indels_near_the_cutsite())
 
-        reads_with_indels_near_the_cutsite = ngg_reference.reads_with_indels_near_the_cutsite(padding=5)
+        ngg_reference = Reference("", n20, sequence, pam, [read_e], padding=5)
+        reads_with_indels_near_the_cutsite = ngg_reference.reads_with_indels_near_the_cutsite
 
         self.assertEqual(len(reads_with_indels_near_the_cutsite), 1)
+        self.assertTrue(ngg_reference.has_reads_with_indels_near_the_cutsite())

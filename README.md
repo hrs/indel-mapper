@@ -15,4 +15,8 @@ Run
 python3 app.py
 ```
 
-## Internal module
+Deploy
+
+```
+git push heroku master
+```

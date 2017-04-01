@@ -1,57 +1,47 @@
 from flask import Flask, render_template, request, flash
-from flask_uploads import (UploadSet, configure_uploads, UploadNotAllowed)
 from indel_mapper_lib.sam_parser import SamParser
 from indel_mapper_lib.reference_parser import ReferenceParser
 from indel_mapper_lib.presenter import Presenter
 import os
+from io import StringIO
 import csv
 import pysam
 
 # Flask
 
 app = Flask(__name__)
-app.config["UPLOADS_DEFAULT_DEST"] = "storage"
 app.secret_key = os.environ["SECRET_FLASK_KEY"]
-
-# uploads
-
-uploaded_alignment_files = UploadSet('alignments', ('sam'))
-uploaded_reference_files = UploadSet('references', ('csv'))
-
-configure_uploads(app, (uploaded_alignment_files, uploaded_reference_files))
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        reference = request.files.get('reference')
-        alignment = request.files.get('alignment')
-        if not (alignment and reference):
+        reference_file = request.files.get('reference')
+        alignment_file = request.files.get('alignment')
+        if not (alignment_file and reference_file):
             flash("You must submit an alignment SAM file and a reference CSV file.")
+        elif not is_extension(reference_file, ".csv"):
+            flash("The reference file must be a CSV file.")
+        elif not is_extension(alignment_file, ".sam"):
+            flash("The alignment file must be a SAM file.")
         else:
             try:
-                alignment_file = uploaded_alignment_files.save(alignment)
-            except UploadNotAllowed:
-                flash("The alignment file was not a SAM file.")
-            else:
-                try:
-                    reference_file = uploaded_reference_files.save(reference)
-                except UploadNotAllowed:
-                    flash("The reference file was not a CSV file.")
-                else:
-                    try:
-                        alignment_full_path = uploaded_alignment_files.path(alignment_file)
-                        reference_full_path = uploaded_reference_files.path(reference_file)
-                        results = compute_indels_near_cutsite(alignment_full_path, reference_full_path)
-                        return render_template("index.html", results=results)
-                    except Exception as e:
-                        print(e)
-                        flash("Error processing.")
-                        return render_template("index.html", results=[])
+                results = compute_indels_near_cutsite(alignment, reference)
+                return render_template("index.html", results=results)
+            except Exception as e:
+                print(e)
+                flash("Error processing.")
+                return render_template("index.html", results=[])
     return render_template("index.html", results=[])
+
+# This is a first pass naive file detection.
+def is_extension(filestorage, extension):
+    filename = filestorage.filename
+    return filename.endswith(extension)
 
 def compute_indels_near_cutsite(sam_file, csv_file):
     reads = SamParser(pysam.AlignmentFile(sam_file, "rb")).reads()
-    references = ReferenceParser(csv.reader(open(csv_file)), reads).references()
+    decoded_csv_file = csv_file.read().decode("utf-8")
+    references = ReferenceParser(csv.reader(StringIO(decoded_csv_file)), reads).references()
 
     presenter_results = Presenter([reference for reference in references if reference.is_valid])
 

@@ -4,6 +4,7 @@ from indel_mapper_lib.sam_parser import SamParser
 from indel_mapper_lib.reference_parser import ReferenceParser
 from indel_mapper_lib.presenter import Presenter
 import os
+import csv
 import pysam
 
 # Flask
@@ -15,7 +16,7 @@ app.secret_key = os.environ["SECRET_FLASK_KEY"]
 # uploads
 
 uploaded_alignment_files = UploadSet('alignments', ('sam'))
-uploaded_reference_files = UploadSet('references', ('txt'))
+uploaded_reference_files = UploadSet('references', ('csv'))
 
 configure_uploads(app, (uploaded_alignment_files, uploaded_reference_files))
 
@@ -50,7 +51,7 @@ def index():
 
 def compute_indels_near_cutsite(sam_file, csv_file):
     reads = SamParser(pysam.AlignmentFile(sam_file, "rb")).reads()
-    references = ReferenceParser(open(csv_file), reads).references()
+    references = ReferenceParser(csv.reader(open(csv_file)), reads).references()
 
     presenter_results = Presenter([reference for reference in references if reference.is_valid])
 

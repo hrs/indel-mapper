@@ -9,8 +9,8 @@ class TestReferenceParser(unittest.TestCase):
         reads = [Read(query_name='lion',reference_name='foo', reference_positions=[1,2], query_sequence="cat", aligned_pairs=()),
                  Read(query_name='wolf',reference_name='foo', reference_positions=[4,5], query_sequence="tag", aligned_pairs=())]
 
-        fake_windows_file = ['foo\tcat\tccaattgg\tngg\rbar\ttag\tggaattttg\tngg']
-        references = ReferenceParser(fake_windows_file, reads).references()
+        fake_csv_file = [('foo','cat','ccaattgg','ngg'),('bar','tag','ggaattttg','ngg')]
+        references = ReferenceParser(fake_csv_file, reads).references()
 
         self.assertEqual(len(references), 2)
 

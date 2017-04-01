@@ -32,11 +32,15 @@
 		<div>
 		  <label for="alignment">Alignment SAM File</label>
 		  <input name="alignment" type="file">
+		  <p> The alignment SAM file is the output of bowtie2 alignment. <p>
 		</div>
 
 		<div>
 		  <label for="reference">Reference CSV File</label>
 		  <input name="reference" type="file">
+		  <p> The reference CSV file should be formatted with name of the reference, reference sequence, n20, and pam.</p>
+		  <p> It should not have headers. The pam should be NGG or CCN. </p>
+		  <p>Example row: brc2,[reference sequence],[n20 sequence],NGG </p>
 		</div>
 
 		<div>
@@ -47,7 +51,7 @@
 	  <div class="result-container">
 		{% for reference_presenter in results %}
 		<h2 class="reference-result">{{ reference_presenter.name() }}</h2>
-		<p>Sequence: {{ reference_presenter.sequence() }}</p>
+		<p class="reference-sequence">Sequence: {{ reference_presenter.sequence() }}</p>
 		<p>N20: {{reference_presenter.n20() }}</p>
 		<p>PAM: {{reference_presenter.pam() }}</p>
 		{% for tally in reference_presenter.tallies %}

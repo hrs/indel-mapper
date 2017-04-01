@@ -10,11 +10,9 @@ class ReferenceParser():
         references_from_file = []
 
         for line in self.reference_file:
-            windows_formatted_lines = line.split('\r')
-            for wl in windows_formatted_lines:
-                name, n20, sequence, pam = wl.split('\t')
-                reads_for_reference = self._reads_for_reference(name)
-                references_from_file.append(Reference(name.strip(), n20.strip(), sequence.strip(), pam.strip(), reads_for_reference))
+            name, n20, sequence, pam = line
+            reads_for_reference = self._reads_for_reference(name)
+            references_from_file.append(Reference(name.strip(), n20.strip(), sequence.strip(), pam.strip(), reads_for_reference))
 
         return references_from_file
 

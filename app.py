@@ -3,14 +3,14 @@ from flask_uploads import (UploadSet, configure_uploads, UploadNotAllowed)
 from indel_mapper_lib.sam_parser import SamParser
 from indel_mapper_lib.reference_parser import ReferenceParser
 from indel_mapper_lib.presenter import Presenter
+import os
 import pysam
 
 # Flask
 
 app = Flask(__name__)
 app.config["UPLOADS_DEFAULT_DEST"] = "storage"
-app.secret_key = ('\xa3\xb6\x15\xe3E\xc4\x8c\xbaT\x14\xd1:'
-              '\xafc\x9c|.\xc0H\x8d\xf2\xe5\xbd\xd5')
+app.secret_key = os.environ["SECRET_FLASK_KEY"]
 
 # uploads
 

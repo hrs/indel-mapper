@@ -2,3 +2,4 @@ biopython
 Flask
 pysam
 gunicorn
+Flask-Uploads

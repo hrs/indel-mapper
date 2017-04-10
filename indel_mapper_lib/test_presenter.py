@@ -8,16 +8,20 @@ from .presenter import DenotationIndex
 from .presenter import Cas9Denotations
 from .presenter import SequenceRelationshipPresentation
 
+
 class TestSequenceTally(unittest.TestCase):
 
     def test_sequence_tally(self):
 
         reference_presentation = "aaaa"
         read_presentation = "aaat"
-        read_name = "foo"
 
-        relationship_a = SequenceRelationshipPresentation(read_presentation, reference_presentation, "foo")
-        relationship_b = SequenceRelationshipPresentation(read_presentation, reference_presentation, "bar")
+        relationship_a = SequenceRelationshipPresentation(read_presentation,
+                                                          reference_presentation,
+                                                          "foo")
+        relationship_b = SequenceRelationshipPresentation(read_presentation,
+                                                          reference_presentation,
+                                                          "bar")
 
         tally_name = "baz"
         tally = SequenceTally(tally_name, relationship_a)
@@ -28,6 +32,7 @@ class TestSequenceTally(unittest.TestCase):
         self.assertEqual(tally.presentations[0].read_name, relationship_a.read_name)
         self.assertEqual(tally.presentations[1].read_name, relationship_b.read_name)
 
+
 class TestSequenceRelationshipPresentation(unittest.TestCase):
 
     def test_relationship_presentation(self):
@@ -35,19 +40,34 @@ class TestSequenceRelationshipPresentation(unittest.TestCase):
         reference_sequence = "ATA"
         read_name = "foo"
 
-        relationship_presentation = SequenceRelationshipPresentation(read_sequence, reference_sequence, read_name)
+        relationship_presentation = SequenceRelationshipPresentation(read_sequence,
+                                                                     reference_sequence,
+                                                                     read_name)
 
-        self.assertEqual(relationship_presentation.read_sequence_presentation, read_sequence)
-        self.assertEqual(relationship_presentation.reference_sequence_presentation, reference_sequence)
+        self.assertEqual(relationship_presentation.read_sequence_presentation,
+                         read_sequence)
+        self.assertEqual(relationship_presentation.reference_sequence_presentation,
+                         reference_sequence)
         self.assertEqual(relationship_presentation.read_name, read_name)
+
 
 class TestReadReferenceRelationship(unittest.TestCase):
 
     def create_relationship(self, aligned_pair_index, is_ngg=True):
 
         aligned_pairs = [(0, 14), (1, 15), (2, 16), (3, None), (4, None), (5, None), (6, 17), (7, 18), (8, 19), (9, 20), (10, 21), (11, 22), (12, 23), (13, 24), (14, 25), (15, 26), (16, 27), (17, 28), (18, 29), (19, 30), (20, 31), (21, 32), (22, 33), (23, 34), (24, 35), (25, 36), (26, 37), (27, 38), (28, 39), (29, 40), (30, 41), (31, 42), (32, 43), (33, 44), (34, 45), (35, 46), (36, 47), (37, 48), (38, 49), (39, 50), (40, 51), (41, 52), (42, 53), (43, 54), (44, 55), (45, 56), (46, 57), (47, 58), (48, 59), (49, 60), (50, 61), (51, 62), (52, 63), (53, 64), (54, 65), (55, 66), (56, 67), (57, 68), (58, 69), (59, 70), (60, 71), (61, 72), (62, 73), (63, 74), (64, 75), (65, 76), (66, 77), (67, 78), (68, 79), (69, 80), (70, 81), (71, 82), (72, 83), (73, 84), (74, 85), (75, 86), (76, 87), (77, 88), (78, 89), (79, 90), (80, 91), (81, 92), (82, 93), (83, 94), (84, 95), (85, 96), (86, 97), (87, 98), (88, 99), (89, 100), (90, 101), (91, 102), (92, 103), (93, 104), (94, 105), (95, 106), (96, 107), (97, 108), (98, 109), (99, 110), (100, 111), (101, 112), (102, 113), (103, 114), (104, 115), (105, 116), (None, 117), (106, 118), (107, 119), (108, 120), (109, 121), (110, 122), (111, 123), (112, 124), (113, 125), (114, 126), (115, 127), (116, 128), (117, 129), (118, 130), (119, 131)]
-        reference_sequence = "AGGAACTGGGAGAGGACGATCCGGTTAGGGAGGTTGGGGAACTAATCTCAACGCTGCGTTTACAGATGAAGCCGCTTTTATATGGCGTATATGTTTGCTTAGAGGGGCCGACGGAGATTAGGAGAAGCCATCCTTTGGCGCCAATGATCAAAGCGTCTGCCAAGGAGAAGAAGCCAAGGGATGGGCCTTTCAGAGAGGGCAAGGAGTCATGCTGCTCTGGATGCCAGTGTCAGGACAAG"
-        read_sequence = "TCCGCAGATCCGGTTAGGGAGGTTGGGGAACTAATCTCAACGCTGCGTTTACAGATGAAGCCGCTTTTATATGGCGTATATGTTTGCTTAGAGGGGCCGACGGAGATAGGAGAAGCCATCCTTTGGCGCCAATGATCAAAGCGTCTGCCAAGGAGAAGAAGCCAAGGGATGGGCCTTTCAGAGAGGGCAAGGAGTCATGCTGCTCTGGATGCCAGTGTCAGGACAA"
+        reference_sequence = "AGGAACTGGGAGAGGACGATCCGGTTAGGGAGGTTGGGGA" \
+                             "ACTAATCTCAACGCTGCGTTTACAGATGAAGCCGCTTTTA" \
+                             "TATGGCGTATATGTTTGCTTAGAGGGGCCGACGGAGATTA" \
+                             "GGAGAAGCCATCCTTTGGCGCCAATGATCAAAGCGTCTGC" \
+                             "CAAGGAGAAGAAGCCAAGGGATGGGCCTTTCAGAGAGGGC" \
+                             "AAGGAGTCATGCTGCTCTGGATGCCAGTGTCAGGACAAG"
+        read_sequence = "TCCGCAGATCCGGTTAGGGAGGTTGGGGAACTAATCTCAA" \
+                        "CGCTGCGTTTACAGATGAAGCCGCTTTTATATGGCGTATA" \
+                        "TGTTTGCTTAGAGGGGCCGACGGAGATAGGAGAAGCCATC" \
+                        "CTTTGGCGCCAATGATCAAAGCGTCTGCCAAGGAGAAGAA" \
+                        "GCCAAGGGATGGGCCTTTCAGAGAGGGCAAGGAGTCATGC" \
+                        "TGCTCTGGATGCCAGTGTCAGGACAA"
         pam_index = 121
         n20_index = 98
 
@@ -79,7 +99,6 @@ class TestReadReferenceRelationship(unittest.TestCase):
         relationship = self.create_relationship(aligned_pair_index=106)
         self.assertTrue(relationship.is_deletion())
 
-
     def test_is_mismatch(self):
         relationship = self.create_relationship(aligned_pair_index=20)
         self.assertFalse(relationship.is_mismatch())
@@ -95,7 +114,6 @@ class TestReadReferenceRelationship(unittest.TestCase):
 
         relationship = self.create_relationship(aligned_pair_index=1)
         self.assertTrue(relationship.is_mismatch())
-
 
     def test_is_between_pam_and_n20_for_ccn(self):
 
@@ -138,26 +156,40 @@ class TestReadReferenceRelationship(unittest.TestCase):
         relationship = self.create_relationship(aligned_pair_index=5)
         self.assertTrue(relationship.next_to_mismatch_or_indel())
 
+
 class TestDenotationIndex(unittest.TestCase):
 
     def test_create_denotation(self):
-        denotation_A = DenotationIndex(index=5, cutsite=False)
-        denotation_B = DenotationIndex(index=10, cutsite=True)
+        denotation_a = DenotationIndex(index=5, cutsite=False)
+        denotation_b = DenotationIndex(index=10, cutsite=True)
 
-        self.assertEqual(denotation_A.index, 5)
-        self.assertFalse(denotation_A.cutsite)
-        self.assertEqual(denotation_A.representation, "|")
+        self.assertEqual(denotation_a.index, 5)
+        self.assertFalse(denotation_a.cutsite)
+        self.assertEqual(denotation_a.representation, "|")
 
-        self.assertEqual(denotation_B.index, 10)
-        self.assertTrue(denotation_B.cutsite)
-        self.assertEqual(denotation_B.representation, "||")
+        self.assertEqual(denotation_b.index, 10)
+        self.assertTrue(denotation_b.cutsite)
+        self.assertEqual(denotation_b.representation, "||")
+
 
 class TestCas9Denotations(unittest.TestCase):
 
     def test_apply_to_ccn_presentation_array(self):
-        reference = ['A', 'T', 'T', 'A', '_', '_', 'G', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', 'C', 'C', 'T', 'A', 'A', 'G', 'G', 'A', 'A', 'G', 'T', 'T', 'T', 'C', 'A', 'G', 'C', 'A', 'A', 'G', 'G', 'C', '-', 'C', 'T', 'A', '-', '-', '-', '-', '-', '-', 'T', 'C', 'T', '_', 'G', '-', '-', '-', 'C', 'C', 'A', '-', '-', '-', '-', 'C', 'A', 'G', 'T', '-', '-', '-', '-', '-', 'G', 'A', 'G', '-', '-', 'G', 'T', 'C', '-', '-', '-', 'T', '_', '_', '_', '_', '_', '_', '_', '_', '_', 'G', 'A', 'C', 'T', 'C', 'C', 'C']
+        reference_sequence = "ATTA__G---------------------------------" \
+                             "----------------------------------------" \
+                             "----------------------------------------" \
+                             "-----------------------CCTAAGGAAGTTTCAGC" \
+                             "AAGGC-CTA------TCT_G---CCA----CAGT-----G" \
+                             "AG--GTC---T_________GACTCCC"
+        reference = list(reference_sequence)
 
-        read = ['G', 'T', 'T', 'C', 'G', 'C', 'G', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', 'C', 'C', 'T', 'A', 'A', 'G', 'G', '_', 'A', 'G', 'T', 'T', 'T', 'C', 'C', 'A', 'G', 'A', 'A', 'G', 'G', 'C', '-', 'C', 'C', 'A', '-', '-', '-', '-', '-', '-', 'T', 'T', 'T', 'G', 'G', '-', '-', '-', 'C', 'A', 'A', '-', '-', '-', '-', 'C', 'G', 'T', 'T', '-', '-', '-', '-', '-', 'G', 'G', 'G', '-', '-', 'G', 'C', 'C', '-', '-', '-', 'T', 'G', 'C', 'C', 'C', 'C', 'C', 'C', 'G', 'G', 'G', 'A', 'T', 'T', 'G', 'G', 'G']
+        read_sequence = "GTTCGCG---------------------------------" \
+                        "----------------------------------------" \
+                        "----------------------------------------" \
+                        "-----------------------CCTAAGG_AGTTTCCAG" \
+                        "AAGGC-CCA------TTTGG---CAA----CGTT-----G" \
+                        "GG--GCC---TGCCCCCCGGGATTGGG"
+        read = list(read_sequence)
 
         cutsite_index = 179
         pam_index = 173
@@ -170,15 +202,38 @@ class TestCas9Denotations(unittest.TestCase):
 
         reference_string, read_string = denotations.apply_to_presentation(reference, read)
 
-        expected_reference = "ATTA__G----------------------------------------------------------------------------------------------------------------------------------------|CCT|AAG||GAAGTTTCAGCAAGGC|-CTA------TCT_G---CCA----CAGT-----GAG--GTC---T_________GACTCCC"
-        expected_read = "GTTCGCG----------------------------------------------------------------------------------------------------------------------------------------|CCT|AAG||G_AGTTTCCAGAAGGC|-CCA------TTTGG---CAA----CGTT-----GGG--GCC---TGCCCCCCGGGATTGGG"
+        expected_reference = "ATTA__G---------------------------------" \
+                             "----------------------------------------" \
+                             "----------------------------------------" \
+                             "-----------------------|CCT|AAG||GAAGTTT" \
+                             "CAGCAAGGC|-CTA------TCT_G---CCA----CAGT-" \
+                             "----GAG--GTC---T_________GACTCCC"
+        expected_read = "GTTCGCG---------------------------------" \
+                        "----------------------------------------" \
+                        "----------------------------------------" \
+                        "-----------------------|CCT|AAG||G_AGTTT" \
+                        "CCAGAAGGC|-CCA------TTTGG---CAA----CGTT-" \
+                        "----GGG--GCC---TGCCCCCCGGGATTGGG"
 
         self.assertEqual(reference_string, expected_reference)
         self.assertEqual(read_string, expected_read)
 
     def test_apply_to_ngg_presentation_array(self):
-        reference = ['G', 'A', 'C', '_', '_', '_', 'G', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', 'T', 'A', 'G', 'A', 'G', 'G', 'G', 'G', 'C', 'C', 'G', 'A', 'C', 'G', 'G', 'A', 'G', 'A', 'T', 'T', 'A', 'G', 'G', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-']
-        read = ['T', 'C', 'C', 'G', 'C', 'A', 'G', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', 'T', 'A', 'G', 'A', 'G', 'G', 'G', 'G', 'C', 'C', 'G', 'A', 'C', 'G', 'G', 'A', 'G', 'A', '_', 'T', 'A', 'G', 'G', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-']
+        reference_sequence = "GAC___G---------------------------------" \
+                             "----------------------------------------" \
+                             "--------TAGAGGGGCCGACGGAGATTAGG---------" \
+                             "----------------------------------------" \
+                             "----------------------------------------" \
+                             "---------------------------"
+        reference = list(reference_sequence)
+
+        read_sequence = "TCCGCAG---------------------------------" \
+                        "----------------------------------------" \
+                        "--------TAGAGGGGCCGACGGAGA_TAGG---------" \
+                        "----------------------------------------" \
+                        "----------------------------------------" \
+                        "---------------------------"
+        read = list(read_sequence)
 
         cutsite_index = 115
         pam_index = 121
@@ -192,33 +247,42 @@ class TestCas9Denotations(unittest.TestCase):
 
         reference_string, read_string = denotations.apply_to_presentation(reference, read)
 
-        expected_reference = "GAC___G---------------------------------------------------------------------------------|TAGAGGGGCCGACGGAG||ATT|AGG|--------------------------------------------------------------------------------------------------------------------"
-        expected_read = "TCCGCAG---------------------------------------------------------------------------------|TAGAGGGGCCGACGGAG||A_T|AGG|--------------------------------------------------------------------------------------------------------------------"
+        expected_reference = "GAC___G---------------------------------" \
+                             "----------------------------------------" \
+                             "--------|TAGAGGGGCCGACGGAG||ATT|AGG|----" \
+                             "----------------------------------------" \
+                             "----------------------------------------" \
+                             "--------------------------------"
+        expected_read = "TCCGCAG---------------------------------" \
+                        "----------------------------------------" \
+                        "--------|TAGAGGGGCCGACGGAG||A_T|AGG|----" \
+                        "----------------------------------------" \
+                        "----------------------------------------" \
+                        "--------------------------------"
         self.assertEqual(reference_string, expected_reference)
         self.assertEqual(read_string, expected_read)
+
 
 class TestPresenter(unittest.TestCase):
 
     def test_present(self):
-        references = []
-
         n20 = "aaaatttc"
         sequence = "tactactacaaaatttcnggt"
         pam = "ngg"
 
-        reference_positions_a = [8,None,None,None,9,10,11,None,None,None,None,12,13,14]
+        reference_positions_a = [8, None, None, None, 9, 10, 11, None, None, None, None, 12, 13, 14]
         read_a = Read("a", "", reference_positions_a, "", ())
 
-        reference_positions_b = [10,15]
+        reference_positions_b = [10, 15]
         read_b = Read("b", "", reference_positions_b, "", ())
 
-        reference_positions_c = [10,11,12,13,14]
+        reference_positions_c = [10, 11, 12, 13, 14]
         read_c = Read("c", "", reference_positions_c, "", ())
 
-        reference_positions_d = [13,None,None,None,None,14]
+        reference_positions_d = [13, None, None, None, None, 14]
         read_d = Read("d", "", reference_positions_d, "", ())
 
-        reference_positions_e = [18,20]
+        reference_positions_e = [18, 20]
         read_e = Read("e", "", reference_positions_e, "", ())
 
         reference_positions_f = [None, None, None, 0, 1, 2]

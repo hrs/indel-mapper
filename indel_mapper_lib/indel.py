@@ -6,9 +6,10 @@ class Indel(object):
         self.length = length
         self.is_deletion = is_deletion
         self.is_insertion = not is_deletion
+        self.is_valid = self._is_valid()
 
     def is_enveloping_cutsite(self, cutsite_index):
         return self.start_index <= cutsite_index and self.end_index >= cutsite_index
 
-    def is_valid(self):
+    def _is_valid(self):
         return self.start_index is not None and self.end_index is not None

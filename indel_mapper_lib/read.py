@@ -47,7 +47,7 @@ class Read(object):
                                           length=((reference_index-1) - prev_reference_index),
                                           is_deletion=True)
                         indels.append(new_indel)
-                        if new_indel.is_valid():
+                        if new_indel.is_valid:
                             valid_indels.append(new_indel)
                 else:
                     # end of insertion (previous reference_index is None and current is not None)
@@ -56,7 +56,7 @@ class Read(object):
                                       length=indel_length,
                                       is_deletion=False)
                     indels.append(new_indel)
-                    if new_indel.is_valid():
+                    if new_indel.is_valid:
                         valid_indels.append(new_indel)
                     indel_length = 0
             else:

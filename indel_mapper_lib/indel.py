@@ -9,3 +9,6 @@ class Indel(object):
 
     def is_enveloping_cutsite(self, cutsite_index):
         return self.start_index <= cutsite_index and self.end_index >= cutsite_index
+
+    def is_valid(self):
+        return self.start_index is not None and self.end_index is not None

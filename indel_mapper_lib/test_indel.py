@@ -29,3 +29,12 @@ class TestIndel(unittest.TestCase):
         self.assertTrue(indel.is_enveloping_cutsite(4))
         self.assertFalse(indel.is_enveloping_cutsite(2))
         self.assertFalse(indel.is_enveloping_cutsite(11))
+
+    def test_is_valid(self):
+        invalid_indel_A = Indel(None, 10, 2, True)
+        invalid_indel_B = Indel(2, None, 2, True)
+        valid_indel = Indel(2, 10, 2, True)
+
+        self.assertFalse(invalid_indel_A.is_valid())
+        self.assertFalse(invalid_indel_B.is_valid())
+        self.assertTrue(valid_indel.is_valid())

@@ -3,6 +3,7 @@ from .reference import Reference
 from .indel import Indel
 from .read import Read
 
+
 class TestReference(unittest.TestCase):
 
     def test_create_reference(self):
@@ -61,7 +62,12 @@ class TestReference(unittest.TestCase):
         self.assertEqual(ccn_reference.cutsite_index(), 6)
 
         n20 = "GCCATTTACACTTCTTTTG"
-        sequence = "AAGGGGGTTTGTTCTCTGGTGGGCAGGAGTGGGGGGTCGCAAGGGCTCAGTGGGGGTGCTTTTTGAGCCAGGATGAGCCAGGAAAAGGACTTTCACAAGGTAATGTCATCACTTAAGGGAAGGACCGGCCATTTACACTTCTTTTGTGGTGGAATGTCATCAGTTAAGGCGGGGCAGGGCATTTTCACTTCTTTTGTGATTCTTCAGTTACTTCAGGCCATCTGGG"
+        sequence = "AAGGGGGTTTGTTCTCTGGTGGGCAGGAGTGGGGGGTCGC" \
+                   "AAGGGCTCAGTGGGGGTGCTTTTTGAGCCAGGATGAGCCA" \
+                   "GGAAAAGGACTTTCACAAGGTAATGTCATCACTTAAGGGA" \
+                   "AGGACCGGCCATTTACACTTCTTTTGTGGTGGAATGTCAT" \
+                   "CAGTTAAGGCGGGGCAGGGCATTTTCACTTCTTTTGTGAT" \
+                   "TCTTCAGTTACTTCAGGCCATCTGGG"
         pam = "NGG"
 
         long_reference = Reference("", n20, sequence, pam, [])
@@ -71,7 +77,12 @@ class TestReference(unittest.TestCase):
 
     def test_pam_and_n20_index(self):
         n20 = "GCCATTTACACTTCTTTTG"
-        sequence = "AAGGGGGTTTGTTCTCTGGTGGGCAGGAGTGGGGGGTCGCAAGGGCTCAGTGGGGGTGCTTTTTGAGCCAGGATGAGCCAGGAAAAGGACTTTCACAAGGTAATGTCATCACTTAAGGGAAGGACCGGCCATTTACACTTCTTTTGTGGTGGAATGTCATCAGTTAAGGCGGGGCAGGGCATTTTCACTTCTTTTGTGATTCTTCAGTTACTTCAGGCCATCTGGG"
+        sequence = "AAGGGGGTTTGTTCTCTGGTGGGCAGGAGTGGGGGGTCGC" \
+                   "AAGGGCTCAGTGGGGGTGCTTTTTGAGCCAGGATGAGCCA" \
+                   "GGAAAAGGACTTTCACAAGGTAATGTCATCACTTAAGGGA" \
+                   "AGGACCGGCCATTTACACTTCTTTTGTGGTGGAATGTCAT" \
+                   "CAGTTAAGGCGGGGCAGGGCATTTTCACTTCTTTTGTGAT" \
+                   "TCTTCAGTTACTTCAGGCCATCTGGG"
         pam = "NGG"
 
         long_reference = Reference("", n20, sequence, pam, [])
@@ -84,12 +95,25 @@ class TestReference(unittest.TestCase):
         sequence = "tactactacaaaatttcnggt"
         pam = "ngg"
 
-        ngg_reference = Reference("", n20, sequence, pam, []) # cutsite is at 13
+        # cutsite is at 13
+        ngg_reference = Reference("", n20, sequence, pam, [])
 
-        indel_a = Indel(start_index=11, end_index=12, length=4, is_deletion=False)
-        indel_b = Indel(start_index=10, end_index=15, length=6, is_deletion=True)
-        indel_c = Indel(start_index=13, end_index=14, length=4, is_deletion=False)
-        indel_d = Indel(start_index=18, end_index=20, length=2, is_deletion=True)
+        indel_a = Indel(start_index=11,
+                        end_index=12,
+                        length=4,
+                        is_deletion=False)
+        indel_b = Indel(start_index=10,
+                        end_index=15,
+                        length=6,
+                        is_deletion=True)
+        indel_c = Indel(start_index=13,
+                        end_index=14,
+                        length=4,
+                        is_deletion=False)
+        indel_d = Indel(start_index=18,
+                        end_index=20,
+                        length=2,
+                        is_deletion=True)
 
         self.assertEqual(ngg_reference.distance_to_cutsite(indel_a), -1)
         self.assertEqual(ngg_reference.distance_to_cutsite(indel_b), 0)
@@ -101,19 +125,22 @@ class TestReference(unittest.TestCase):
         sequence = "tactactacaaaatttcnggt"
         pam = "ngg"
 
-        reference_positions_a = [8,None,None,None,9,10,11,None,None,None,None,12,13,14]
+        reference_positions_a = [8, None, None, None,
+                                 9, 10, 11, None,
+                                 None, None, None, 12,
+                                 13, 14]
         read_a = Read("a", "", reference_positions_a, "", ())
 
-        reference_positions_b = [10,15]
+        reference_positions_b = [10, 15]
         read_b = Read("b", "", reference_positions_b, "", ())
 
-        reference_positions_c = [10,11,12,13,14]
+        reference_positions_c = [10, 11, 12, 13, 14]
         read_c = Read("c", "", reference_positions_c, "", ())
 
-        reference_positions_d = [13,None,None,None,None,14]
+        reference_positions_d = [13, None, None, None, None, 14]
         read_d = Read("d", "", reference_positions_d, "", ())
 
-        reference_positions_e = [18,20]
+        reference_positions_e = [18, 20]
         read_e = Read("e", "", reference_positions_e, "", ())
 
         reference_positions_f = [None, None, None, 0, 1, 2]
@@ -126,7 +153,8 @@ class TestReference(unittest.TestCase):
         reads_with_indels_near_the_cutsite = ngg_reference.reads_with_indels_near_the_cutsite
 
         self.assertEqual(len(reads_with_indels_near_the_cutsite), 3)
-        self.assertEqual(" ".join([read.query_name for read in reads_with_indels_near_the_cutsite]), "a b d")
+        self.assertEqual([read.query_name for read in reads_with_indels_near_the_cutsite],
+                         ["a", "b", "d"])
 
         ngg_reference = Reference("", n20, sequence, pam, [read_e], padding=1)
         reads_with_indels_near_the_cutsite = ngg_reference.reads_with_indels_near_the_cutsite

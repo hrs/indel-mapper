@@ -1,5 +1,6 @@
 from indel_mapper_lib.reference import Reference
 
+
 class ReferenceParser():
 
     def __init__(self, reference_file, reads):

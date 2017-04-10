@@ -1,5 +1,6 @@
 from indel_mapper_lib.indel import Indel
 
+
 class Read(object):
 
     def __init__(self, query_name, reference_name, reference_positions, query_sequence, aligned_pairs):

@@ -1,5 +1,6 @@
 import re
 
+
 class SequenceTally(object):
 
     def __init__(self, cutsite_region_representation, sequence_relationship_presentation):
@@ -12,12 +13,14 @@ class SequenceTally(object):
     def count(self):
         return len(self.presentations)
 
+
 class SequenceRelationshipPresentation(object):
 
     def __init__(self, read_sequence_presentation, reference_sequence_presentation, read_name):
         self.read_sequence_presentation = read_sequence_presentation
         self.reference_sequence_presentation = reference_sequence_presentation
         self.read_name = read_name
+
 
 class ReadReferenceRelationship(object):
 
@@ -87,6 +90,7 @@ class ReadReferenceRelationship(object):
     def _is_mismatch(self, read_base, reference_base):
         return read_base != reference_base
 
+
 class DenotationIndex(object):
 
     def __init__(self, index, cutsite=False):
@@ -100,6 +104,7 @@ class DenotationIndex(object):
         else:
             return "|"
 
+
 class Cas9Denotations(object):
 
     def __init__(self, cutsite_index, pam_index, n20_pam_index, n20_index, aligned_pairs, is_ngg):
@@ -112,13 +117,12 @@ class Cas9Denotations(object):
         self.denotation_indexes = self._get_denotation_indexes()
         self.filtered_denotation_indexes = [index_object for index_object in self.denotation_indexes if index_object.index is not None]
 
-
     def _get_denotation_indexes(self):
         denotation_indexes = []
         for aligned_pair_index, sequence_indexes in enumerate(self.aligned_pairs):
             _, reference_index = sequence_indexes
             if reference_index == self.cutsite_index:
-                denotation_indexes.append(DenotationIndex(aligned_pair_index,True))
+                denotation_indexes.append(DenotationIndex(aligned_pair_index, True))
             elif reference_index == self.pam_index or reference_index == self.n20_pam_index or reference_index == self.n20_index:
                 denotation_indexes.append(DenotationIndex(aligned_pair_index))
 
@@ -149,6 +153,7 @@ class Cas9Denotations(object):
             read_presentation_string = ''.join(read_presentation_array)
 
         return reference_presentation_string, read_presentation_string
+
 
 class ReferencePresenter(object):
 

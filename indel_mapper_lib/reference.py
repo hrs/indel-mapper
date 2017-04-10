@@ -1,6 +1,7 @@
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
 
+
 class Reference(object):
 
     def __init__(self, name, n20, sequence, pam, reads, padding=3):

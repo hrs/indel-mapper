@@ -1,5 +1,6 @@
 from indel_mapper_lib.read import Read
 
+
 class SamParser(object):
 
     def __init__(self, samfile):
@@ -10,7 +11,7 @@ class SamParser(object):
 
     def filter_bad_reads(self, pysam_read):
         try:
-            pysam_read.reference_name # try and see if the reference name exists
+            pysam_read.reference_name  # try and see if the reference name exists
             return len(pysam_read.get_reference_positions(full_length=True)) != 0
         except:
             return False

@@ -1,6 +1,7 @@
 import unittest
 from .indel import Indel
 
+
 class TestIndel(unittest.TestCase):
 
     def test_create_indel(self):

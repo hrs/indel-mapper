@@ -28,7 +28,7 @@ class Read(object):
 
         # This indicates that the read has 2 bases that matches the 120th and
         # 121st base of the reference sequence. However, the read is missing 3
-        # ases that would otherwise match the 122th, 123th, and 124th base of
+        # bases that would otherwise match the 122th, 123th, and 124th base of
         # the reference sequence. It has another base that matches the 125th of
         # the reference sequence. This would be an deletion.
 
@@ -44,8 +44,7 @@ class Read(object):
                         indels.append(Indel(start_index=prev_reference_index,
                                             end_index=reference_index,
                                             length=((reference_index-1) - prev_reference_index),
-                                            is_deletion=True)
-                        )
+                                            is_deletion=True))
                 else:
                     # end of insertion (previous reference_index is None and current is not None)
                     indels.append(Indel(start_index=reference_index_of_start_of_insertion,

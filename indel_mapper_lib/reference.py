@@ -81,7 +81,7 @@ class Reference(object):
 
     def distance_to_cutsite(self, indel):
 
-        if indel.is_enveloping_the_cutsite(self.cutsite_index()):
+        if indel.is_enveloping_cutsite(self.cutsite_index()):
             return 0
 
         if indel.end_index < self.cutsite_index():

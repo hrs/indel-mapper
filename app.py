@@ -19,26 +19,25 @@ def index():
         alignment_file = request.files.get('alignment')
         if not (alignment_file and reference_file):
             flash("You must submit an alignment SAM file and a reference CSV file.")
-        elif not is_extension(reference_file, ".csv"):
+        elif not _is_extension(reference_file, ".csv"):
             flash("The reference file must be a CSV file.")
-        elif not is_extension(alignment_file, ".sam"):
+        elif not _is_extension(alignment_file, ".sam"):
             flash("The alignment file must be a SAM file.")
         else:
             try:
-                results = compute_indels_near_cutsite(alignment_file, reference_file)
+                results = _compute_indels_near_cutsite(alignment_file, reference_file)
                 return render_template("index.html", results=results)
             except Exception as e:
-                print(e)
                 flash("Error processing.")
                 return render_template("index.html", results=[])
     return render_template("index.html", results=[])
 
 # This is a first pass naive file detection.
-def is_extension(filestorage, extension):
+def _is_extension(filestorage, extension):
     filename = filestorage.filename
     return filename.endswith(extension)
 
-def compute_indels_near_cutsite(sam_file, csv_file):
+def _compute_indels_near_cutsite(sam_file, csv_file):
     reads = SamParser(pysam.AlignmentFile(sam_file, "rb")).reads()
     decoded_csv_file = csv_file.read().decode("utf-8")
     references = ReferenceParser(csv.reader(StringIO(decoded_csv_file)), reads).references()

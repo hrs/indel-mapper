@@ -3,4 +3,3 @@ __pycache__/*
 .#*
 indel-mapper/*
 indel_mapper_lib/__pycache__/*
-storage/*

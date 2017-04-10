@@ -14,29 +14,54 @@ class Read(object):
     def _compute_indels(self):
         indels = []
 
-        start_indel_index = self.reference_positions[0]
+        # self.reference_positions is an array of indexes that signify how the
+        # read aligns to the reference.
+
+        # Example 1: [120, 121, None, None, None, 122]
+
+        # This indicates the read has 2 bases that matches the 120th and 121st
+        # base of the reference sequence. The 'None's indicate the read then has
+        # 3 additional bases that the reference doesn't have. Then the read has
+        # a base that matches the reference again. This would be an insertion.
+
+        # Example 2: [120, 121, 125]
+
+        # This indicates that the read has 2 bases that matches the 120th and
+        # 121st base of the reference sequence. However, the read is missing 3
+        # ases that would otherwise match the 122th, 123th, and 124th base of
+        # the reference sequence. It has another base that matches the 125th of
+        # the reference sequence. This would be an deletion.
+
         prev_reference_index = self.reference_positions[0]
+        reference_index_of_start_of_insertion = self.reference_positions[0]
         indel_length = 0
 
-        for idx in self.reference_positions[1:]:
-            if idx is not None:
+        for reference_index in self.reference_positions[1:]:
+            if reference_index is not None:
                 if prev_reference_index is not None:
                     # deletion
-                    if idx != prev_reference_index + 1 and idx != prev_reference_index:
-                        indels.append(Indel(prev_reference_index, idx, (idx-1) - prev_reference_index, True))
+                    if reference_index != prev_reference_index + 1 and reference_index != prev_reference_index:
+                        indels.append(Indel(start_index=prev_reference_index,
+                                            end_index=reference_index,
+                                            length=((reference_index-1) - prev_reference_index),
+                                            is_deletion=True)
+                        )
                 else:
-                    # end of insertion
-                    indels.append(Indel(start_indel_index, idx, indel_length, False))
+                    # end of insertion (previous reference_index is None and current is not None)
+                    indels.append(Indel(start_index=reference_index_of_start_of_insertion,
+                                        end_index=reference_index,
+                                        length=indel_length,
+                                        is_deletion=False))
                     indel_length = 0
             else:
                 # start of insertion
                 if prev_reference_index is not None:
-                    start_indel_index = prev_reference_index
+                    reference_index_of_start_of_insertion = prev_reference_index
                     indel_length += 1
                 else:
                     indel_length += 1
 
-            prev_reference_index = idx
+            prev_reference_index = reference_index
 
         return indels
 

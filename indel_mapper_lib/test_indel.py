@@ -17,7 +17,7 @@ class TestIndel(unittest.TestCase):
         self.assertTrue(indel.is_deletion)
         self.assertFalse(indel.is_insertion)
 
-    def test_envelope_cutsite(self):
+    def test_is_enveloping_the_cutsite(self):
         start_index = 3
         end_index = 10
         length = 6
@@ -25,6 +25,6 @@ class TestIndel(unittest.TestCase):
 
         indel = Indel(start_index, end_index, length, is_deletion)
 
-        self.assertTrue(indel.envelope_cutsite(4))
-        self.assertFalse(indel.envelope_cutsite(2))
-        self.assertFalse(indel.envelope_cutsite(11))
+        self.assertTrue(indel.is_enveloping_the_cutsite(4))
+        self.assertFalse(indel.is_enveloping_the_cutsite(2))
+        self.assertFalse(indel.is_enveloping_the_cutsite(11))

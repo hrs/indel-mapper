@@ -2,22 +2,29 @@
 
 ## Web application
 
-Setup
+Set up your environment:
 
-```
+```shell
 virtualenv indel-mapper
 source indel-mapper/bin/activate
-pip3 install requirements.txt
+pip3 install -r requirements.txt
 ```
-Run
 
-```
+Run the application:
+
+```shell
 python3 app.py
 ```
 
-Deploy
+Run the tests:
 
+```shell
+python3 -m unittest
 ```
+
+Deploy to Heroku:
+
+```shell
 git push heroku master
 ```
 

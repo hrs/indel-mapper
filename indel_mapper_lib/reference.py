@@ -4,7 +4,7 @@ from Bio.Alphabet import generic_dna
 
 class Reference(object):
 
-    def __init__(self, name, n20, sequence, pam, reads, padding=3):
+    def __init__(self, name, n20, sequence, pam, reads, desired_max_dist_to_cutsite=3):
         self.name = name
         self.n20 = n20.upper()
         self.sequence = sequence.upper()
@@ -12,12 +12,11 @@ class Reference(object):
         self.reverse_complement_n20 = self._get_reverse_complement_n20()
         self.reads = reads
         self.reads_with_indels_near_the_cutsite = []
-        self.padding = padding
 
         # save computation
         self.is_valid = self._compute_is_valid()
         if self.is_valid:
-            self.reads_with_indels_near_the_cutsite = self._compute_reads_with_indels_near_the_cutsite(self.padding)
+            self.reads_with_indels_near_the_cutsite = self._compute_reads_with_indels_near_the_cutsite(desired_max_dist_to_cutsite)
 
     def is_ngg(self):
         return self.pam == "NGG"

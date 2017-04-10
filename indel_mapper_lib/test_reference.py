@@ -129,26 +129,26 @@ class TestReference(unittest.TestCase):
                                  9, 10, 11, None,
                                  None, None, None, 12,
                                  13, 14]
-        read_a = Read("a", "", reference_positions_a, "", ())
+        read_a = Read("a", reference_positions_a, "", ())
 
         reference_positions_b = [10, 15]
-        read_b = Read("b", "", reference_positions_b, "", ())
+        read_b = Read("b", reference_positions_b, "", ())
 
         reference_positions_c = [10, 11, 12, 13, 14]
-        read_c = Read("c", "", reference_positions_c, "", ())
+        read_c = Read("c", reference_positions_c, "", ())
 
         reference_positions_d = [13, None, None, None, None, 14]
-        read_d = Read("d", "", reference_positions_d, "", ())
+        read_d = Read("d", reference_positions_d, "", ())
 
         reference_positions_e = [18, 20]
-        read_e = Read("e", "", reference_positions_e, "", ())
+        read_e = Read("e", reference_positions_e, "", ())
 
         reference_positions_f = [None, None, None, 0, 1, 2]
-        read_f = Read("f", "", reference_positions_f, "", ())
+        read_f = Read("f", reference_positions_f, "", ())
 
         reads = [read_a, read_b, read_c, read_d, read_e, read_f]
 
-        ngg_reference = Reference("", n20, sequence, pam, reads, padding=1)
+        ngg_reference = Reference("", n20, sequence, pam, reads, desired_max_dist_to_cutsite=1)
 
         reads_with_indels_near_the_cutsite = ngg_reference.reads_with_indels_near_the_cutsite
 
@@ -156,13 +156,13 @@ class TestReference(unittest.TestCase):
         self.assertEqual([read.query_name for read in reads_with_indels_near_the_cutsite],
                          ["a", "b", "d"])
 
-        ngg_reference = Reference("", n20, sequence, pam, [read_e], padding=1)
+        ngg_reference = Reference("", n20, sequence, pam, [read_e], desired_max_dist_to_cutsite=1)
         reads_with_indels_near_the_cutsite = ngg_reference.reads_with_indels_near_the_cutsite
 
         self.assertEqual(len(reads_with_indels_near_the_cutsite), 0)
         self.assertFalse(ngg_reference.has_reads_with_indels_near_the_cutsite())
 
-        ngg_reference = Reference("", n20, sequence, pam, [read_e], padding=5)
+        ngg_reference = Reference("", n20, sequence, pam, [read_e], desired_max_dist_to_cutsite=5)
         reads_with_indels_near_the_cutsite = ngg_reference.reads_with_indels_near_the_cutsite
 
         self.assertEqual(len(reads_with_indels_near_the_cutsite), 1)

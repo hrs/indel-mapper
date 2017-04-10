@@ -38,9 +38,9 @@ def _is_extension(filestorage, extension):
     return filename.endswith(extension)
 
 def _compute_indels_near_cutsite(sam_file, csv_file):
-    reads = SamParser(pysam.AlignmentFile(sam_file, "rb")).reads()
+    reference_name_to_reads = SamParser(pysam.AlignmentFile(sam_file, "rb")).reference_name_to_reads_dict()
     decoded_csv_file = csv_file.read().decode("utf-8")
-    references = ReferenceParser(csv.reader(StringIO(decoded_csv_file)), reads).references()
+    references = ReferenceParser(csv.reader(StringIO(decoded_csv_file)), reference_name_to_reads).references()
 
     presenter_results = Presenter([reference for reference in references if reference.is_valid])
 

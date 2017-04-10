@@ -46,11 +46,11 @@ class TestSamParser(unittest.TestCase):
         sam_file = "fake alignment file"
         mock_values = self.mock_fetch()
         mock_fetcher.return_value = mock_values
-        reads = SamParser(sam_file).reads()
 
-        self.assertEqual(len(reads), 1)
-        self.assertEqual(reads[0].query_name, mock_values[-1].query_name)
-        self.assertEqual(reads[0].reference_name,
-                         mock_values[-1].reference_name)
-        self.assertEqual(reads[0].reference_positions,
-                         mock_values[-1].reference_positions)
+        reference_name_to_reads = SamParser(sam_file).reference_name_to_reads_dict()
+        expected_reference_name = mock_values[-1].reference_name
+
+        self.assertEqual(len(reference_name_to_reads), 1)
+        self.assertTrue(expected_reference_name in reference_name_to_reads)
+        self.assertEqual(len(reference_name_to_reads[expected_reference_name]), 1)
+        self.assertEqual(reference_name_to_reads[expected_reference_name][0].query_name, mock_values[-1].query_name)

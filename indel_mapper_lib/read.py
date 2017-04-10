@@ -3,11 +3,10 @@ from indel_mapper_lib.indel import Indel
 
 class Read(object):
 
-    def __init__(self, query_name, reference_name, reference_positions, query_sequence, aligned_pairs):
+    def __init__(self, query_name, reference_positions, query_sequence, aligned_pairs):
         self.query_name = query_name
         self.query_sequence = query_sequence
         self.aligned_pairs = aligned_pairs
-        self.reference_name = reference_name
         self.reference_positions = reference_positions
         self.indels, self.valid_indels = self._compute_indels()
 

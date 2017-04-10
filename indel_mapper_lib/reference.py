@@ -1,5 +1,4 @@
-from Bio.Seq import Seq
-from Bio.Alphabet import generic_dna
+from .sequence import Sequence
 
 
 class Reference(object):
@@ -22,7 +21,7 @@ class Reference(object):
         return self.pam == "NGG"
 
     def _get_reverse_complement_n20(self):
-        return str(Seq(self.n20, generic_dna).reverse_complement())
+        return str(Sequence(self.n20).reverse_complement())
 
     def _compute_is_valid(self):
         # is n20 or reverse complement of n20 in sequence

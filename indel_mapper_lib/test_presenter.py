@@ -28,14 +28,14 @@ class TestSequenceTally(unittest.TestCase):
         self.assertEqual(tally.presentations[0].read_name, relationship_a.read_name)
         self.assertEqual(tally.presentations[1].read_name, relationship_b.read_name)
 
-class TestSequenceRelationshipPresentation(object):
+class TestSequenceRelationshipPresentation(unittest.TestCase):
 
     def test_relationship_presentation(self):
         read_sequence = "AAA"
         reference_sequence = "ATA"
         read_name = "foo"
 
-        relationship_presentaiton = SequenceRelationshipPresentation(read_sequence, reference_sequence, read_name)
+        relationship_presentation = SequenceRelationshipPresentation(read_sequence, reference_sequence, read_name)
 
         self.assertEqual(relationship_presentation.read_sequence_presentation, read_sequence)
         self.assertEqual(relationship_presentation.reference_sequence_presentation, reference_sequence)

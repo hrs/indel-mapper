@@ -1,0 +1,14 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: python:3.5
+    working_directory: /home/ubuntu/indel-mapper
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: pip3 install -r requirements.txt
+      - run:
+          name: Run Tests
+          command: python3 -m unittest

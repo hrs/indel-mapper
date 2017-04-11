@@ -8,12 +8,12 @@ class Read(object):
         self.query_sequence = query_sequence
         self.aligned_pairs = aligned_pairs
         self.reference_positions = reference_positions
-        self.indels, self.valid_indels = self._compute_indels()
+        self.indels = []
+        self.valid_indels = []
+
+        self._compute_indels()
 
     def _compute_indels(self):
-        indels = []
-        valid_indels = []
-
         # self.reference_positions is an array of indexes that signify how the
         # read aligns to the reference.
 
@@ -41,22 +41,16 @@ class Read(object):
                 if prev_reference_index is not None:
                     # deletion
                     if reference_index != prev_reference_index + 1 and reference_index != prev_reference_index:
-                        new_indel = Indel(start_index=prev_reference_index,
-                                          end_index=reference_index,
-                                          length=((reference_index-1) - prev_reference_index),
-                                          is_deletion=True)
-                        indels.append(new_indel)
-                        if new_indel.is_valid:
-                            valid_indels.append(new_indel)
+                        self._make_new_indel(start_index=prev_reference_index,
+                                             end_index=reference_index,
+                                             length=((reference_index-1) - prev_reference_index),
+                                             is_deletion=True)
                 else:
                     # end of insertion (previous reference_index is None and current is not None)
-                    new_indel = Indel(start_index=reference_index_of_start_of_insertion,
-                                      end_index=reference_index,
-                                      length=indel_length,
-                                      is_deletion=False)
-                    indels.append(new_indel)
-                    if new_indel.is_valid:
-                        valid_indels.append(new_indel)
+                    self._make_new_indel(start_index=reference_index_of_start_of_insertion,
+                                         end_index=reference_index,
+                                         length=indel_length,
+                                         is_deletion=False)
                     indel_length = 0
             else:
                 # start of insertion
@@ -68,4 +62,11 @@ class Read(object):
 
             prev_reference_index = reference_index
 
-        return indels, valid_indels
+    def _make_new_indel(self, start_index, end_index, length, is_deletion):
+        new_indel = Indel(start_index=start_index,
+                          end_index=end_index,
+                          length=length,
+                          is_deletion=is_deletion)
+        self.indels.append(new_indel)
+        if new_indel.is_valid:
+            self.valid_indels.append(new_indel)

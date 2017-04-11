@@ -1,75 +1,84 @@
 <!doctype html>
 <html>
   <head>
-	<title>Indel Mapper</title>
-	<link rel=stylesheet href="{{ url_for('static', filename='style.css') }}">
+    <title>Indel Mapper</title>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel=stylesheet href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script>
+     $(function() {
+         $(".accordion").accordion({
+             animate: false,
+             collapsible: true,
+             heightStyle: "content",
+         });
+     });
+    </script>
   </head>
 
   <body>
-	<div class="container">
-
-	  <div class="banner">
-		<h1 id=title>Indel Mapper</h1>
-	  </div>
-
-	  {% with flashes = get_flashed_messages() %}
-      {% if flashes %}
-      <div class=flashes>
-        <ul>
-          {% for f in flashes %}
-          <li>{{ f }}</li>
-          {% endfor %}
-        </ul>
+    <div class="container">
+      <div class="banner">
+        <h1 id=title>Indel Mapper</h1>
       </div>
-      {% endif %}
+
+      {% with flashes = get_flashed_messages() %}
+        {% if flashes %}
+          <div class=flashes>
+            <ul>
+              {% for f in flashes %}
+              <li>{{ f }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
       {% endwith %}
 
       {% block body %}
       {% endblock body %}
 
-	  <form method="POST" enctype="multipart/form-data">
+      <form method="POST" enctype="multipart/form-data">
+        <div>
+          <label for="alignment">Alignment SAM File</label>
+          <input name="alignment" type="file">
+          <p> The alignment SAM file is the output of bowtie2 alignment. <p>
+        </div>
 
-		<div>
-		  <label for="alignment">Alignment SAM File</label>
-		  <input name="alignment" type="file">
-		  <p> The alignment SAM file is the output of bowtie2 alignment. <p>
-		</div>
+        <div>
+          <label for="reference">Reference CSV File</label>
+          <input name="reference" type="file">
+          <p> The reference CSV file should be formatted with name of the reference, reference sequence, n20, and pam.</p>
+          <p> It should not have headers. The pam should be NGG or CCN. </p>
+          <p>Example row: brc2,[reference sequence],[n20 sequence],NGG </p>
+        </div>
 
-		<div>
-		  <label for="reference">Reference CSV File</label>
-		  <input name="reference" type="file">
-		  <p> The reference CSV file should be formatted with name of the reference, reference sequence, n20, and pam.</p>
-		  <p> It should not have headers. The pam should be NGG or CCN. </p>
-		  <p>Example row: brc2,[reference sequence],[n20 sequence],NGG </p>
-		</div>
+        <div>
+          <input type="submit" value="Submit">
+        </div>
+      </form>
 
-		<div>
-		  <input type="submit" value="Submit">
-		</div>
-	  </form>
+      {% for reference_presenter in results %}
+        <h2>{{ reference_presenter.name() }}</h2>
 
-	  <div class="result-container">
-		{% for reference_presenter in results %}
-		<h2 class="reference-result">{{ reference_presenter.name() }}</h2>
-		<p class="reference-sequence">Sequence: {{ reference_presenter.sequence() }}</p>
-		<p>N20: {{reference_presenter.n20() }}</p>
-		<p>PAM: {{reference_presenter.pam() }}</p>
-		{% for tally in reference_presenter.tallies %}
-		<div class="read-reference-result">
-		  <p>Cutsite Region: {{ tally.cutsite_region_representation }}</p>
-		  <p>Count: {{ tally.count() }}</p>
-		  {% for sequence in tally.presentations %}
-		  <div class="sequence">
-		  <p>Ref : {{ sequence.reference_sequence_presentation }}</p>
-		  <p>Read: {{ sequence.read_sequence_presentation }}</p>
-		  </div>
-		  {% endfor %}
-		</div>
-		{% endfor %}
-		{% endfor %}
+        <p>Sequence: <span class="sequence tiny-text">{{ reference_presenter.sequence() }}</span></p>
+        <p>N20: <span class="sequence">{{ reference_presenter.n20() }}</span></p>
+        <p>PAM: <span class="sequence">{{ reference_presenter.pam() }}</span></p>
+
+        <div class="accordion">
+          {% for tally in reference_presenter.tallies %}
+            <h3>Cutsite: <span class="sequence">{{ tally.cutsite_region_representation }}</span> ({{ tally.count() }})</h3>
+            <div class="region-results">
+              {% for sequence in tally.presentations %}
+                <div class="sequence tiny-text">
+                  <p>Ref : {{ sequence.reference_sequence_presentation }}</p>
+                  <p>Read: {{ sequence.read_sequence_presentation }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
 	  </div>
-	</div>
-
   </body>
-
 </html>

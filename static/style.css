@@ -1,12 +1,8 @@
-body {
+.sequence {
 	font-family: Courier;
 }
 
-.reference-sequence {
-	font-size: 10px;
-}
-
-.sequence {
+.tiny-text {
 	font-size: 10px;
 }
 

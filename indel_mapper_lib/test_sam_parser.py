@@ -53,4 +53,5 @@ class TestSamParser(unittest.TestCase):
         self.assertEqual(len(reference_name_to_reads), 1)
         self.assertTrue(expected_reference_name in reference_name_to_reads)
         self.assertEqual(len(reference_name_to_reads[expected_reference_name]), 1)
-        self.assertEqual(reference_name_to_reads[expected_reference_name][0].query_name, mock_values[-1].query_name)
+        self.assertEqual(reference_name_to_reads[expected_reference_name][0].query_name,
+                         mock_values[-1].query_name)

@@ -6,14 +6,13 @@ class Read(object):
     def __init__(self, query_name, reference_positions, query_sequence, aligned_pairs):
         self.query_name = query_name
         self.query_sequence = query_sequence
-        self.aligned_pairs = aligned_pairs
-        self.reference_positions = reference_positions
+        self.aligned_pairs = tuple(aligned_pairs)
         self.indels = []
         self.valid_indels = []
 
-        self._compute_indels()
+        self._compute_indels(reference_positions)
 
-    def _compute_indels(self):
+    def _compute_indels(self, reference_positions):
         # self.reference_positions is an array of indexes that signify how the
         # read aligns to the reference.
 
@@ -32,11 +31,11 @@ class Read(object):
         # the reference sequence. It has another base that matches the 125th of
         # the reference sequence. This would be an deletion.
 
-        prev_reference_index = self.reference_positions[0]
-        reference_index_of_start_of_insertion = self.reference_positions[0]
+        prev_reference_index = reference_positions[0]
+        reference_index_of_start_of_insertion = reference_positions[0]
         indel_length = 0
 
-        for reference_index in self.reference_positions[1:]:
+        for reference_index in reference_positions[1:]:
             if reference_index is not None:
                 if prev_reference_index is not None:
                     # deletion

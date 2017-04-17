@@ -3,18 +3,9 @@
   <head>
     <title>Indel Mapper</title>
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <link rel=stylesheet href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-    <script>
-     $(function() {
-         $(".accordion").accordion({
-             animate: false,
-             collapsible: true,
-             heightStyle: "content",
-         });
-     });
-    </script>
   </head>
 
   <body>
@@ -23,17 +14,18 @@
         <h1 id=title>Indel Mapper</h1>
       </div>
 
+
+      <div class="flashes">
       {% with flashes = get_flashed_messages() %}
         {% if flashes %}
-          <div class=flashes>
             <ul>
               {% for f in flashes %}
               <li>{{ f }}</li>
               {% endfor %}
             </ul>
-          </div>
         {% endif %}
-      {% endwith %}
+	  {% endwith %}
+      </div>
 
       {% block body %}
       {% endblock body %}
@@ -79,6 +71,8 @@
           {% endfor %}
         </div>
       {% endfor %}
-	  </div>
+	</div>
+
+	<script type="text/javascript" src="{{ url_for('static', filename='script.js') }}"></script>
   </body>
 </html>

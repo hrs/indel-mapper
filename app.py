@@ -22,11 +22,11 @@ def index():
         alignment_file = request.files.get('alignment')
 
         if not (alignment_file and reference_file):
-            flash("You must submit an alignment SAM file and a reference CSV file.")
+            flash("You must submit an alignment file and a reference file.")
         elif not _is_extension(reference_file, ".csv"):
-            flash("The reference file must be a CSV file.")
+            flash("The reference file must be a .csv file.")
         elif not _is_extension(alignment_file, ".sam"):
-            flash("The alignment file must be a SAM file.")
+            flash("The alignment file must be a .sam file.")
         else:
             try:
                 results = _compute_indels_near_cutsite(alignment_file, reference_file)

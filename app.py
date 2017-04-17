@@ -7,11 +7,13 @@ import csv
 import os
 import pysam
 
+MAX_CONTENT_BYTES = 20 * 1024 * 1024 # 20MB
+
 # Flask
 
 app = Flask(__name__)
 app.secret_key = os.environ["SECRET_FLASK_KEY"]
-app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_BYTES
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
@@ -34,6 +36,7 @@ def index():
                 return render_template("index.html", results=[])
     return render_template("index.html", results=[])
 
+# HTTP Error 413 Request Entity Too Large
 @app.errorhandler(413)
 def request_entity_too_large(error):
     flash("Uploaded file is too large.")

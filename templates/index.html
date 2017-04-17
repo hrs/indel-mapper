@@ -18,13 +18,13 @@
       <div class="flashes">
       {% with flashes = get_flashed_messages() %}
         {% if flashes %}
-            <ul>
+            <ul class="server-error">
               {% for f in flashes %}
               <li>{{ f }}</li>
               {% endfor %}
             </ul>
         {% endif %}
-	  {% endwith %}
+      {% endwith %}
       </div>
 
       {% block body %}

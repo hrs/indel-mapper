@@ -11,12 +11,13 @@ function clearMessages(cssClass) {
 	$("." + cssClass).remove();
 }
 
-function checkUploadFiles(target, cssClass, fileExtension, maxSize) {
+function checkUploadFiles(target, description, fileExtension, maxSize, cssClass) {
+	clearMessages("server-error")
 	if (target[0].files[0].size > maxSize) {
-		showMessage('The ' + cssClass + ' file is too large.', cssClass);
+		showMessage('The ' + description + ' file is too large.', cssClass);
 	} else if (!endsWith(target.val().toLowerCase(), fileExtension)) {
 		console.log(target.val().toLowerCase());
-		showMessage('The ' + cssClass + ' file must be a ' + fileExtension + ' file.', cssClass);
+		showMessage('The ' + description + ' file must be a ' + fileExtension + ' file.', cssClass);
 	} else {
 		clearMessages(cssClass);
 	}
@@ -24,14 +25,14 @@ function checkUploadFiles(target, cssClass, fileExtension, maxSize) {
 
 $('[name=alignment]').bind('change', function() {
 	target = $('[name=alignment]');
-	maxSize = 16 * 1024 * 1024; // 20MB
-	checkUploadFiles(target, 'alignment', '.sam', maxSize)
+	maxSize = 16 * 1024 * 1024; // 16MB
+	checkUploadFiles(target, 'alignment', '.sam', maxSize, 'alignment-file-error')
 });
 
 $('[name=reference]').bind('change', function() {
 	target = $('[name=reference]');
 	maxSize = 3 * 1024 * 1024; // 3MB
-	checkUploadFiles(target, 'reference', '.csv', maxSize)
+	checkUploadFiles(target, 'reference', '.csv', maxSize, 'reference-file-error')
 });
 
 $(function() {

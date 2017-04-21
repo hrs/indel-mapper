@@ -1,5 +1,6 @@
 import re
-
+from .alignment import Alignment
+from .realigner import Realigner
 
 class SequenceTally(object):
 
@@ -190,15 +191,25 @@ class ReferencePresenter(object):
         reference_presentation_with_sites, read_presentation_with_sites = self.denote_cas9_sites(
             reference_presentation, read_presentation, reference, read)
         cas9_region_presentation = self.compute_cas9_presentation(read_presentation_with_sites)
+        #return self.realign(read_presentation_with_sites, reference_presentation_with_sites, cas9_region_presentation)
         return reference_presentation_with_sites, read_presentation_with_sites, cas9_region_presentation
 
     def compute_cas9_presentation(self, read_presentation_string):
         areas_of_interest = re.split("[-]+", read_presentation_string)
-        for area_of_interest in areas_of_interest:
+        for index, area_of_interest in enumerate(areas_of_interest):
             # there should be at least one | in one of the sections
             if "|" in area_of_interest:
                 return area_of_interest
         return ""
+
+    def realign(self, read, reference, cas9_region):
+        start_index = read.index(cas9_region)
+        end_index = start_index + len(cas9_region)
+        reference_region = reference[start_index:end_index]
+        ali = Realigner(Alignment(reference_region, cas9_region)).align()
+        new_read = read.replace(cas9_region, ali.read)
+        new_reference = reference.replace(reference_region, ali.reference)
+        return new_reference, new_read, ali.read
 
     def get_sequence_representation(self, reference, read):
         aligned_pairs = read.aligned_pairs

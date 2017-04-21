@@ -23,7 +23,7 @@ class Realigner:
         # For every base in the sequence,
         for i, base in enumerate(read):
             # if it's preceded by an underscore,
-            if read[i - 1] == "_" and read[i] != "_":
+            if i != 0 and read[i - 1] == "_" and read[i] != "_":
                 j = i - 1
                 # search backward to find where the chain of underscores began,
                 while read[j] == "_":

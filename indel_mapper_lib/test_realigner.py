@@ -33,3 +33,10 @@ class TestRealigner(unittest.TestCase):
              "___CAT||"],
             ["CATCAT||",
              "CAT___||"])
+
+    def test_reading_on_the_boundary(self):
+        self.assert_realignment(
+            ["AGC|CAGAA||TGG|GGG|",
+             "A__|_____||_GG|GGG|"],
+            ["AGC|CAGAA||TGG|GGG|",
+             "A__|_____||_GG|GGG|"])

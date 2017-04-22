@@ -271,7 +271,7 @@ class TestPresenter(unittest.TestCase):
 
         reference_positions_b = [10, 15]
         seq_b = "at"
-        read_b = Read("b", reference_positions_b, seq_b, self.create_aligned_pairs(seq_b, reference_positions_b))
+        read_b = Read("b", reference_positions_b, seq_b, ((0,10),(None, 11), (None, 12), (None, 13), (None, 14), (1, 15)))
 
         reference_positions_c = [10, 11, 12, 13, 14]
         seq_c = "aaatt"
@@ -283,7 +283,7 @@ class TestPresenter(unittest.TestCase):
 
         reference_positions_e = [18, 20]
         seq_e = "gt"
-        read_e = Read("e", reference_positions_e, seq_e, self.create_aligned_pairs(seq_e, reference_positions_e))
+        read_e = Read("e", reference_positions_e, seq_e, ((0,18),(None, 19),(1,20)))
 
         reference_positions_f = [None, None, None, 0, 1, 2]
         seq_f = "gggtac"
@@ -327,7 +327,7 @@ class TestPresenter(unittest.TestCase):
         self.assertEqual(mutation_clusters[1].count(), 1)
         self.assertEqual(mutation_clusters[2].count(), 1)
 
-        expected = [('', 'AT', 'AT'), ('|AAAAT||TGGGG', '---|AAAAT||TGGGG', '---|AAAAT||____T'), ('C|TTTAAATTTTAT||T', 'C|TTTAAATTTTAT||T', 'C|___AAA____AT||T')]
+        expected = [('A___||_T', 'A___||_T', 'AAAT||TT'), ('|AAAAT||TGGGG', '---|AAAAT||TGGGG', '---|AAAAT||____T'), ('C|TTTAAATTTTAT||T', 'C|TTTAAATTTTAT||T', 'C|___AAA____AT||T')]
 
         actual = []
         for cluster in mutation_clusters:

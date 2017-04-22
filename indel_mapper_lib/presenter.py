@@ -2,10 +2,10 @@ import re
 from .alignment import Alignment
 from .realigner import Realigner
 
-class SequenceTally(object):
+class MutationCluster(object):
 
-    def __init__(self, cutsite_region_representation, sequence_relationship_presentation):
-        self.cutsite_region_representation = cutsite_region_representation
+    def __init__(self, cutsite_region, sequence_relationship_presentation):
+        self.cutsite_region = cutsite_region
         self.presentations = [sequence_relationship_presentation]
 
     def add_read(self, presentation):
@@ -15,13 +15,11 @@ class SequenceTally(object):
         return len(self.presentations)
 
 
-class SequenceRelationshipPresentation(object):
+class AlignmentRepresentation(object):
 
-    def __init__(self, read_sequence_presentation, reference_sequence_presentation, read_name):
-        self.read_sequence_presentation = read_sequence_presentation
-        self.reference_sequence_presentation = reference_sequence_presentation
-        self.read_name = read_name
-
+    def __init__(self, read_representation, reference_representation):
+        self.read_representation = read_representation
+        self.reference_representation = reference_representation
 
 class ReadReferenceRelationship(object):
 
@@ -160,7 +158,8 @@ class ReferencePresenter(object):
 
     def __init__(self, reference):
         self.reference = reference
-        self.tallies = sorted(self._tally_sequences(reference).values(), key=lambda tally: tally.count(), reverse=True)
+        self.mutant_clusters = sorted(self._cluster_reads_by_mutations_near_cutsite(reference).values(),
+                                      key=lambda cluster: cluster.count(), reverse=True)
 
     def name(self):
         return self.reference.name
@@ -174,16 +173,16 @@ class ReferencePresenter(object):
     def pam(self):
         return self.reference.pam
 
-    def _tally_sequences(self, reference):
-        tallies = {}
+    def _cluster_reads_by_mutations_near_cutsite(self, reference):
+        clusters = {}
         for read in reference.reads_with_indels_near_the_cutsite:
-            reference_presentation, read_presentation, cutsite_region_presentation = self.present_sequence(reference, read)
-            sequence_relationship_presentation = SequenceRelationshipPresentation(read_presentation, reference_presentation, read.query_name)
-            if cutsite_region_presentation in tallies:
-                tallies[cutsite_region_presentation].add_read(sequence_relationship_presentation)
+            reference_presentation, read_presentation, cutsite_region = self.present_sequence(reference, read)
+            sequence_relationship_presentation = AlignmentRepresentation(read_presentation, reference_presentation)
+            if cutsite_region in clusters:
+                clusters[cutsite_region].add_read(sequence_relationship_presentation)
             else:
-                tallies[cutsite_region_presentation] = SequenceTally(cutsite_region_presentation, sequence_relationship_presentation)
-        return tallies
+                clusters[cutsite_region] = MutationCluster(cutsite_region, sequence_relationship_presentation)
+        return clusters
 
     def present_sequence(self, reference, read):
 

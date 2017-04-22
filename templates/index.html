@@ -64,7 +64,7 @@
         <p>Sequence: <span class="sequence tiny-text">{{ reference_presenter.sequence() }}</span></p>
         <p>N20: <span class="sequence">{{ reference_presenter.n20() }}</span></p>
         <p>PAM: <span class="sequence">{{ reference_presenter.pam() }}</span></p>
-
+		<p>Total Reads: <span>{{ reference_presenter.total_reads() }}</span></p>
         <div class="accordion">
           {% for cluster in reference_presenter.mutation_clusters %}
             <h3>Cutsite: <span class="sequence">{{ cluster.cutsite_region }}</span> ({{ cluster.count() }})</h3>

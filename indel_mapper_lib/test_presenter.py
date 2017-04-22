@@ -1,54 +1,46 @@
 import unittest
 from .read import Read
 from .reference import Reference
-from .presenter import SequenceTally
+from .presenter import MutationCluster
 from .presenter import Presenter
 from .presenter import ReadReferenceRelationship
 from .presenter import DenotationIndex
 from .presenter import Cas9Denotations
-from .presenter import SequenceRelationshipPresentation
+from .presenter import AlignmentRepresentation
 
 
-class TestSequenceTally(unittest.TestCase):
+class TestMutationCluster(unittest.TestCase):
 
-    def test_sequence_tally(self):
+    def test_mutation_cluster(self):
 
-        reference_presentation = "aaaa"
-        read_presentation = "aaat"
+        representation_a = AlignmentRepresentation(read_representation="-aaaa-",
+                                                   reference_representation="-aaat-")
+        representation_b = AlignmentRepresentation(read_representation="-cccc-",
+                                                   reference_representation="-ccct-")
 
-        relationship_a = SequenceRelationshipPresentation(read_presentation,
-                                                          reference_presentation,
-                                                          "foo")
-        relationship_b = SequenceRelationshipPresentation(read_presentation,
-                                                          reference_presentation,
-                                                          "bar")
+        cluster_key = "t-"
+        cluster = MutationCluster(cluster_key, representation_a)
 
-        tally_name = "baz"
-        tally = SequenceTally(tally_name, relationship_a)
+        cluster.add_read(representation_b)
 
-        tally.add_read(relationship_b)
-
-        self.assertEqual(tally.count(), 2)
-        self.assertEqual(tally.presentations[0].read_name, relationship_a.read_name)
-        self.assertEqual(tally.presentations[1].read_name, relationship_b.read_name)
+        self.assertEqual(cluster.count(), 2)
+        self.assertEqual(cluster.presentations[0].read_representation, representation_a.read_representation)
+        self.assertEqual(cluster.presentations[1].read_representation, representation_b.read_representation)
 
 
-class TestSequenceRelationshipPresentation(unittest.TestCase):
+class TestAlignmentRepresentation(unittest.TestCase):
 
-    def test_relationship_presentation(self):
-        read_sequence = "AAA"
-        reference_sequence = "ATA"
-        read_name = "foo"
+    def test_alignment_representation(self):
+        read_representation = "AAA"
+        reference_representation = "ATA"
 
-        relationship_presentation = SequenceRelationshipPresentation(read_sequence,
-                                                                     reference_sequence,
-                                                                     read_name)
+        alignment_representation = AlignmentRepresentation(read_representation,
+                                                           reference_representation)
 
-        self.assertEqual(relationship_presentation.read_sequence_presentation,
-                         read_sequence)
-        self.assertEqual(relationship_presentation.reference_sequence_presentation,
-                         reference_sequence)
-        self.assertEqual(relationship_presentation.read_name, read_name)
+        self.assertEqual(alignment_representation.read_representation,
+                         read_representation)
+        self.assertEqual(alignment_representation.reference_representation,
+                         reference_representation)
 
 
 class TestReadReferenceRelationship(unittest.TestCase):

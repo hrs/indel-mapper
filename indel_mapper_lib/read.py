@@ -5,7 +5,7 @@ class Read(object):
 
     def __init__(self, query_name, reference_positions, query_sequence, aligned_pairs):
         self.query_name = query_name
-        self.query_sequence = query_sequence
+        self.query_sequence = query_sequence.upper()
         self.aligned_pairs = tuple(aligned_pairs)
         self.indels = []
         self.valid_indels = []

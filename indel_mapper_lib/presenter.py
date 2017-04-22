@@ -1,26 +1,25 @@
 import re
+from .alignment import Alignment
+from .realigner import Realigner
 
+class MutationCluster(object):
 
-class SequenceTally(object):
+    def __init__(self, cutsite_region, representation):
+        self.cutsite_region = cutsite_region
+        self.representations = [representation]
 
-    def __init__(self, cutsite_region_representation, sequence_relationship_presentation):
-        self.cutsite_region_representation = cutsite_region_representation
-        self.presentations = [sequence_relationship_presentation]
-
-    def add_read(self, presentation):
-        self.presentations.append(presentation)
+    def add_read(self, representation):
+        self.representations.append(representation)
 
     def count(self):
-        return len(self.presentations)
+        return len(self.representations)
 
 
-class SequenceRelationshipPresentation(object):
+class AlignmentRepresentation(object):
 
-    def __init__(self, read_sequence_presentation, reference_sequence_presentation, read_name):
-        self.read_sequence_presentation = read_sequence_presentation
-        self.reference_sequence_presentation = reference_sequence_presentation
-        self.read_name = read_name
-
+    def __init__(self, read_representation, reference_representation):
+        self.read_representation = read_representation
+        self.reference_representation = reference_representation
 
 class ReadReferenceRelationship(object):
 
@@ -159,7 +158,8 @@ class ReferencePresenter(object):
 
     def __init__(self, reference):
         self.reference = reference
-        self.tallies = sorted(self._tally_sequences(reference).values(), key=lambda tally: tally.count(), reverse=True)
+        self.mutation_clusters = sorted(self._cluster_reads_by_mutations_near_cutsite(reference).values(),
+                                        key=lambda cluster: cluster.count(), reverse=True)
 
     def name(self):
         return self.reference.name
@@ -173,32 +173,44 @@ class ReferencePresenter(object):
     def pam(self):
         return self.reference.pam
 
-    def _tally_sequences(self, reference):
-        tallies = {}
+    def total_reads(self):
+        return len(self.reference.reads)
+
+    def _cluster_reads_by_mutations_near_cutsite(self, reference):
+        clusters = {}
         for read in reference.reads_with_indels_near_the_cutsite:
-            reference_presentation, read_presentation, cutsite_region_presentation = self.present_sequence(reference, read)
-            sequence_relationship_presentation = SequenceRelationshipPresentation(read_presentation, reference_presentation, read.query_name)
-            if cutsite_region_presentation in tallies:
-                tallies[cutsite_region_presentation].add_read(sequence_relationship_presentation)
+            reference_representation, read_representation, cutsite_region = self.get_representations(reference, read)
+            alignment_representation = AlignmentRepresentation(read_representation, reference_representation)
+            if cutsite_region in clusters:
+                clusters[cutsite_region].add_read(alignment_representation)
             else:
-                tallies[cutsite_region_presentation] = SequenceTally(cutsite_region_presentation, sequence_relationship_presentation)
-        return tallies
+                clusters[cutsite_region] = MutationCluster(cutsite_region, alignment_representation)
+        return clusters
 
-    def present_sequence(self, reference, read):
+    def get_representations(self, reference, read):
 
-        reference_presentation, read_presentation = self.get_sequence_representation(reference, read)
-        reference_presentation_with_sites, read_presentation_with_sites = self.denote_cas9_sites(
-            reference_presentation, read_presentation, reference, read)
-        cas9_region_presentation = self.compute_cas9_presentation(read_presentation_with_sites)
-        return reference_presentation_with_sites, read_presentation_with_sites, cas9_region_presentation
+        reference_rep_array, read_rep_array = self.get_sequence_representation(reference, read)
+        reference_representation_with_sites, read_representation_with_sites = self.denote_cas9_sites(
+            reference_rep_array, read_rep_array, reference, read)
+        cas9_region = self.compute_cas9_presentation(read_representation_with_sites)
+        return self.realign(read_representation_with_sites, reference_representation_with_sites, cas9_region)
 
     def compute_cas9_presentation(self, read_presentation_string):
         areas_of_interest = re.split("[-]+", read_presentation_string)
-        for area_of_interest in areas_of_interest:
+        for index, area_of_interest in enumerate(areas_of_interest):
             # there should be at least one | in one of the sections
             if "|" in area_of_interest:
                 return area_of_interest
         return ""
+
+    def realign(self, read, reference, cas9_region):
+        start_index = read.index(cas9_region)
+        end_index = start_index + len(cas9_region)
+        cas9_region_in_reference = reference[start_index:end_index]
+        new_alignment = Realigner(Alignment(cas9_region_in_reference, cas9_region)).align()
+        new_read = read.replace(cas9_region, new_alignment.read)
+        new_reference = reference.replace(cas9_region_in_reference, new_alignment.reference)
+        return new_reference, new_read, new_alignment.read
 
     def get_sequence_representation(self, reference, read):
         aligned_pairs = read.aligned_pairs

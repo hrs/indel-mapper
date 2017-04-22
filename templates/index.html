@@ -64,15 +64,15 @@
         <p>Sequence: <span class="sequence tiny-text">{{ reference_presenter.sequence() }}</span></p>
         <p>N20: <span class="sequence">{{ reference_presenter.n20() }}</span></p>
         <p>PAM: <span class="sequence">{{ reference_presenter.pam() }}</span></p>
-
+		<p>Total Reads: <span>{{ reference_presenter.total_reads() }}</span></p>
         <div class="accordion">
-          {% for tally in reference_presenter.tallies %}
-            <h3>Cutsite: <span class="sequence">{{ tally.cutsite_region_representation }}</span> ({{ tally.count() }})</h3>
+          {% for cluster in reference_presenter.mutation_clusters %}
+            <h3>Cutsite: <span class="sequence">{{ cluster.cutsite_region }}</span> ({{ cluster.count() }})</h3>
             <div class="region-results">
-              {% for sequence in tally.presentations %}
+              {% for sequence in cluster.representations %}
                 <div class="sequence tiny-text">
-                  <p>Ref : {{ sequence.reference_sequence_presentation }}</p>
-                  <p>Read: {{ sequence.read_sequence_presentation }}</p>
+                  <p>Ref : {{ sequence.reference_representation }}</p>
+                  <p>Read: {{ sequence.read_representation }}</p>
                 </div>
               {% endfor %}
             </div>

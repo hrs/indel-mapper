@@ -1,54 +1,46 @@
 import unittest
 from .read import Read
 from .reference import Reference
-from .presenter import SequenceTally
+from .presenter import MutationCluster
 from .presenter import Presenter
 from .presenter import ReadReferenceRelationship
 from .presenter import DenotationIndex
 from .presenter import Cas9Denotations
-from .presenter import SequenceRelationshipPresentation
+from .presenter import AlignmentRepresentation
 
 
-class TestSequenceTally(unittest.TestCase):
+class TestMutationCluster(unittest.TestCase):
 
-    def test_sequence_tally(self):
+    def test_mutation_cluster(self):
 
-        reference_presentation = "aaaa"
-        read_presentation = "aaat"
+        representation_a = AlignmentRepresentation(read_representation="-aaaa-",
+                                                   reference_representation="-aaat-")
+        representation_b = AlignmentRepresentation(read_representation="-cccc-",
+                                                   reference_representation="-ccct-")
 
-        relationship_a = SequenceRelationshipPresentation(read_presentation,
-                                                          reference_presentation,
-                                                          "foo")
-        relationship_b = SequenceRelationshipPresentation(read_presentation,
-                                                          reference_presentation,
-                                                          "bar")
+        cluster_key = "t-"
+        cluster = MutationCluster(cluster_key, representation_a)
 
-        tally_name = "baz"
-        tally = SequenceTally(tally_name, relationship_a)
+        cluster.add_read(representation_b)
 
-        tally.add_read(relationship_b)
-
-        self.assertEqual(tally.count(), 2)
-        self.assertEqual(tally.presentations[0].read_name, relationship_a.read_name)
-        self.assertEqual(tally.presentations[1].read_name, relationship_b.read_name)
+        self.assertEqual(cluster.count(), 2)
+        self.assertEqual(cluster.representations[0].read_representation, representation_a.read_representation)
+        self.assertEqual(cluster.representations[1].read_representation, representation_b.read_representation)
 
 
-class TestSequenceRelationshipPresentation(unittest.TestCase):
+class TestAlignmentRepresentation(unittest.TestCase):
 
-    def test_relationship_presentation(self):
-        read_sequence = "AAA"
-        reference_sequence = "ATA"
-        read_name = "foo"
+    def test_alignment_representation(self):
+        read_representation = "AAA"
+        reference_representation = "ATA"
 
-        relationship_presentation = SequenceRelationshipPresentation(read_sequence,
-                                                                     reference_sequence,
-                                                                     read_name)
+        alignment_representation = AlignmentRepresentation(read_representation,
+                                                           reference_representation)
 
-        self.assertEqual(relationship_presentation.read_sequence_presentation,
-                         read_sequence)
-        self.assertEqual(relationship_presentation.reference_sequence_presentation,
-                         reference_sequence)
-        self.assertEqual(relationship_presentation.read_name, read_name)
+        self.assertEqual(alignment_representation.read_representation,
+                         read_representation)
+        self.assertEqual(alignment_representation.reference_representation,
+                         reference_representation)
 
 
 class TestReadReferenceRelationship(unittest.TestCase):
@@ -265,33 +257,84 @@ class TestCas9Denotations(unittest.TestCase):
 
 class TestPresenter(unittest.TestCase):
 
-    def test_present(self):
-        n20 = "aaaatttc"
-        sequence = "tactactacaaaatttcnggt"
-        pam = "ngg"
+    def create_aligned_pairs(self, read_sequence, reference_positions):
+        return tuple(zip(range(len(read_sequence)), reference_positions))
+
+    def create_test_reference(self, name):
+        self.n20 = "aaaatttc"
+        self.sequence = "tactactacaaaatttcnggt"
+        self.pam = "ngg"
 
         reference_positions_a = [8, None, None, None, 9, 10, 11, None, None, None, None, 12, 13, 14]
-        read_a = Read("a", reference_positions_a, "", ())
+        seq_a = "ctttaaattttatt"
+        read_a = Read("a", reference_positions_a, seq_a, self.create_aligned_pairs(seq_a, reference_positions_a))
 
         reference_positions_b = [10, 15]
-        read_b = Read("b", reference_positions_b, "", ())
+        seq_b = "at"
+        read_b = Read("b", reference_positions_b, seq_b, ((0,10),(None, 11), (None, 12), (None, 13), (None, 14), (1, 15)))
 
         reference_positions_c = [10, 11, 12, 13, 14]
-        read_c = Read("c", reference_positions_c, "", ())
+        seq_c = "aaatt"
+        read_c = Read("c", reference_positions_c, seq_a, self.create_aligned_pairs(seq_c, reference_positions_c))
 
-        reference_positions_d = [13, None, None, None, None, 14]
-        read_d = Read("d", reference_positions_d, "", ())
+        reference_positions_d = [6, 7, 8, 9, 10, 11, 12, 13, None, None, None, None, 14]
+        seq_d = "tacaaaattggggt"
+        read_d = Read("d", reference_positions_d, seq_d, self.create_aligned_pairs(seq_d, reference_positions_d))
 
         reference_positions_e = [18, 20]
-        read_e = Read("e", reference_positions_e, "", ())
+        seq_e = "gt"
+        read_e = Read("e", reference_positions_e, seq_e, ((0,18),(None, 19),(1,20)))
 
         reference_positions_f = [None, None, None, 0, 1, 2]
-        read_f = Read("f", reference_positions_f, "", ())
+        seq_f = "gggtac"
+        read_f = Read("f", reference_positions_f, seq_f, self.create_aligned_pairs(seq_f, reference_positions_f))
 
         reads = [read_a, read_b, read_c, read_d, read_e, read_f]
 
-        ngg_reference = Reference("", n20, sequence, pam, reads)
+        return Reference(name, self.n20, self.sequence, self.pam, reads)
 
-        test_p = Presenter([ngg_reference])
 
-        self.assertEqual(len(test_p.present()), 1)
+    def test_reference_presenter_results(self):
+
+        references = [self.create_test_reference("foo"), self.create_test_reference("bar")]
+
+        test_presenter = Presenter(references)
+        results = test_presenter.present()
+
+        self.assertEqual(len(results), 2)
+
+        self.assertEqual(results[0].sequence(), self.sequence.upper())
+        self.assertEqual(results[0].n20(), self.n20.upper())
+        self.assertEqual(results[0].pam(), self.pam.upper())
+        self.assertEqual(results[0].name(), "foo")
+        self.assertEqual(len(results[0].mutation_clusters), 3)
+        self.assertEqual(results[0].total_reads(), 6)
+
+        self.assertEqual(results[1].sequence(), self.sequence.upper())
+        self.assertEqual(results[1].n20(), self.n20.upper())
+        self.assertEqual(results[1].pam(), self.pam.upper())
+        self.assertEqual(results[1].name(), "bar")
+        self.assertEqual(len(results[1].mutation_clusters), 3)
+        self.assertEqual(results[1].total_reads(), 6)
+
+    def test_cluster_results(self):
+        references = [self.create_test_reference("foo")]
+
+        test_presenter = Presenter(references)
+        results = test_presenter.present()
+
+        mutation_clusters = results[0].mutation_clusters
+
+        self.assertEqual(mutation_clusters[0].count(), 1)
+        self.assertEqual(mutation_clusters[1].count(), 1)
+        self.assertEqual(mutation_clusters[2].count(), 1)
+
+        expected = [('A___||_T', 'A___||_T', 'AAAT||TT'), ('|AAAAT||TGGGG', '---|AAAAT||TGGGG', '---|AAAAT||____T'), ('C|TTTAAATTTTAT||T', 'C|TTTAAATTTTAT||T', 'C|___AAA____AT||T')]
+
+        actual = []
+        for cluster in mutation_clusters:
+            representation = cluster.representations
+            got = (cluster.cutsite_region, representation[0].read_representation, representation[0].reference_representation)
+            actual.append(got)
+
+        self.assertEqual(sorted(expected), sorted(actual))

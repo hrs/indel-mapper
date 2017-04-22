@@ -308,12 +308,14 @@ class TestPresenter(unittest.TestCase):
         self.assertEqual(results[0].pam(), self.pam.upper())
         self.assertEqual(results[0].name(), "foo")
         self.assertEqual(len(results[0].mutation_clusters), 3)
+        self.assertEqual(results[0].total_reads(), 6)
 
         self.assertEqual(results[1].sequence(), self.sequence.upper())
         self.assertEqual(results[1].n20(), self.n20.upper())
         self.assertEqual(results[1].pam(), self.pam.upper())
         self.assertEqual(results[1].name(), "bar")
         self.assertEqual(len(results[1].mutation_clusters), 3)
+        self.assertEqual(results[1].total_reads(), 6)
 
     def test_cluster_results(self):
         references = [self.create_test_reference("foo")]

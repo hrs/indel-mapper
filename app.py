@@ -32,7 +32,6 @@ def index():
                 results = _compute_indels_near_cutsite(alignment_file, reference_file)
                 return render_template("index.html", results=results)
             except Exception as e:
-                print(e)
                 flash("Error processing.")
                 return render_template("index.html", results=[])
     return render_template("index.html", results=[])

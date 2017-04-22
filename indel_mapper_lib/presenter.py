@@ -173,6 +173,9 @@ class ReferencePresenter(object):
     def pam(self):
         return self.reference.pam
 
+    def total_reads(self):
+        return len(self.reference.reads)
+
     def _cluster_reads_by_mutations_near_cutsite(self, reference):
         clusters = {}
         for read in reference.reads_with_indels_near_the_cutsite:
@@ -190,8 +193,7 @@ class ReferencePresenter(object):
         reference_representation_with_sites, read_representation_with_sites = self.denote_cas9_sites(
             reference_rep_array, read_rep_array, reference, read)
         cas9_region = self.compute_cas9_presentation(read_representation_with_sites)
-        #return self.realign(read_presentation_with_sites, reference_presentation_with_sites, cas9_region_presentation)
-        return reference_representation_with_sites, read_representation_with_sites, cas9_region
+        return self.realign(read_representation_with_sites, reference_representation_with_sites, cas9_region)
 
     def compute_cas9_presentation(self, read_presentation_string):
         areas_of_interest = re.split("[-]+", read_presentation_string)
@@ -204,11 +206,11 @@ class ReferencePresenter(object):
     def realign(self, read, reference, cas9_region):
         start_index = read.index(cas9_region)
         end_index = start_index + len(cas9_region)
-        reference_region = reference[start_index:end_index]
-        ali = Realigner(Alignment(reference_region, cas9_region)).align()
-        new_read = read.replace(cas9_region, ali.read)
-        new_reference = reference.replace(reference_region, ali.reference)
-        return new_reference, new_read, ali.read
+        cas9_region_in_reference = reference[start_index:end_index]
+        new_alignment = Realigner(Alignment(cas9_region_in_reference, cas9_region)).align()
+        new_read = read.replace(cas9_region, new_alignment.read)
+        new_reference = reference.replace(cas9_region_in_reference, new_alignment.reference)
+        return new_reference, new_read, new_alignment.read
 
     def get_sequence_representation(self, reference, read):
         aligned_pairs = read.aligned_pairs

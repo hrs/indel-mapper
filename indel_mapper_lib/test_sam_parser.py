@@ -31,9 +31,11 @@ class TestSamParser(unittest.TestCase):
         segment_a = FakeAlignedSegment(query_name='foo')
         segment_b = FakeAlignedSegment(query_name='bar',
                                        reference_name='cats',
+                                       query_sequence='cattttt',
                                        reference_positions=())
         segment_c = FakeAlignedSegment(query_name='baz',
                                        reference_name='dogs',
+                                       query_sequence='taggggg',
                                        reference_positions=(1, 2, None,
                                                             None, 3),
                                        cigartuples=((0, 1), (0, 2), (2, None),

@@ -4,15 +4,15 @@ from .realigner import Realigner
 
 class MutationCluster(object):
 
-    def __init__(self, cutsite_region, sequence_relationship_presentation):
+    def __init__(self, cutsite_region, representation):
         self.cutsite_region = cutsite_region
-        self.presentations = [sequence_relationship_presentation]
+        self.representations = [representation]
 
-    def add_read(self, presentation):
-        self.presentations.append(presentation)
+    def add_read(self, representation):
+        self.representations.append(representation)
 
     def count(self):
-        return len(self.presentations)
+        return len(self.representations)
 
 
 class AlignmentRepresentation(object):
@@ -158,8 +158,8 @@ class ReferencePresenter(object):
 
     def __init__(self, reference):
         self.reference = reference
-        self.mutant_clusters = sorted(self._cluster_reads_by_mutations_near_cutsite(reference).values(),
-                                      key=lambda cluster: cluster.count(), reverse=True)
+        self.mutation_clusters = sorted(self._cluster_reads_by_mutations_near_cutsite(reference).values(),
+                                        key=lambda cluster: cluster.count(), reverse=True)
 
     def name(self):
         return self.reference.name
@@ -176,22 +176,22 @@ class ReferencePresenter(object):
     def _cluster_reads_by_mutations_near_cutsite(self, reference):
         clusters = {}
         for read in reference.reads_with_indels_near_the_cutsite:
-            reference_presentation, read_presentation, cutsite_region = self.present_sequence(reference, read)
-            sequence_relationship_presentation = AlignmentRepresentation(read_presentation, reference_presentation)
+            reference_representation, read_representation, cutsite_region = self.get_representations(reference, read)
+            alignment_representation = AlignmentRepresentation(read_representation, reference_representation)
             if cutsite_region in clusters:
-                clusters[cutsite_region].add_read(sequence_relationship_presentation)
+                clusters[cutsite_region].add_read(alignment_representation)
             else:
-                clusters[cutsite_region] = MutationCluster(cutsite_region, sequence_relationship_presentation)
+                clusters[cutsite_region] = MutationCluster(cutsite_region, alignment_representation)
         return clusters
 
-    def present_sequence(self, reference, read):
+    def get_representations(self, reference, read):
 
-        reference_presentation, read_presentation = self.get_sequence_representation(reference, read)
-        reference_presentation_with_sites, read_presentation_with_sites = self.denote_cas9_sites(
-            reference_presentation, read_presentation, reference, read)
-        cas9_region_presentation = self.compute_cas9_presentation(read_presentation_with_sites)
+        reference_rep_array, read_rep_array = self.get_sequence_representation(reference, read)
+        reference_representation_with_sites, read_representation_with_sites = self.denote_cas9_sites(
+            reference_rep_array, read_rep_array, reference, read)
+        cas9_region = self.compute_cas9_presentation(read_representation_with_sites)
         #return self.realign(read_presentation_with_sites, reference_presentation_with_sites, cas9_region_presentation)
-        return reference_presentation_with_sites, read_presentation_with_sites, cas9_region_presentation
+        return reference_representation_with_sites, read_representation_with_sites, cas9_region
 
     def compute_cas9_presentation(self, read_presentation_string):
         areas_of_interest = re.split("[-]+", read_presentation_string)

@@ -69,10 +69,10 @@
           {% for cluster in reference_presenter.mutation_clusters %}
             <h3>Cutsite: <span class="sequence">{{ cluster.cutsite_region }}</span> ({{ cluster.count() }})</h3>
             <div class="region-results">
-              {% for sequence in cluster.presentations %}
+              {% for sequence in cluster.representations %}
                 <div class="sequence tiny-text">
-                  <p>Ref : {{ sequence.reference_sequence_presentation }}</p>
-                  <p>Read: {{ sequence.read_sequence_presentation }}</p>
+                  <p>Ref : {{ sequence.reference_representation }}</p>
+                  <p>Read: {{ sequence.read_representation }}</p>
                 </div>
               {% endfor %}
             </div>

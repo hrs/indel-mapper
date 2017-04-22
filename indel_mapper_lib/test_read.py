@@ -20,7 +20,7 @@ class TestRead(unittest.TestCase):
                          aligned_pairs)
 
         self.assertEqual(test_read.query_name, query_name)
-        self.assertEqual(test_read.query_sequence, query_sequence)
+        self.assertEqual(test_read.query_sequence, query_sequence.upper())
         self.assertEqual(test_read.aligned_pairs, aligned_pairs)
 
     def test_create_indels_for_read(self):

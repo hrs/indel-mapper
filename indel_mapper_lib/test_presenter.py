@@ -7,6 +7,7 @@ from .presenter import ReadReferenceRelationship
 from .presenter import DenotationIndex
 from .presenter import Cas9Denotations
 from .presenter import AlignmentRepresentation
+from .presenter import ReferencePresenter
 
 
 class TestMutationCluster(unittest.TestCase):
@@ -254,6 +255,19 @@ class TestCas9Denotations(unittest.TestCase):
         self.assertEqual(reference_string, expected_reference)
         self.assertEqual(read_string, expected_read)
 
+class TestReferencePresenter(unittest.TestCase):
+
+    def test_realign(self):
+        test_reference_presenter = ReferencePresenter(Reference("foo", "", "", "", []))
+        reference = "CAG|A__________GG|TC--------"
+        read = "CAT|AAAATCTTTGAGG|GC--------"
+        cas9_region = "CAT|AAAATCTTTGAGG|GC"
+
+        new_reference, new_read, new_cas9_region = test_reference_presenter._realign(reference, read, cas9_region)
+
+        self.assertEqual(new_read, read)
+        self.assertEqual(new_cas9_region, cas9_region)
+        self.assertEqual(new_reference, "CAG|__________AGG|TC--------")
 
 class TestPresenter(unittest.TestCase):
 

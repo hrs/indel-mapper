@@ -6,7 +6,6 @@ CUTSITE_REPRESENTATION = "||" # string representation of where the cutsite is
 PAM_AND_N20_REPRESENTATION = "|" # string representation of the boundaries of the pam and n20
 
 class MutationCluster(object):
-
     def __init__(self, cutsite_region, representation):
         self.cutsite_region = cutsite_region
         self.representations = [representation]
@@ -17,8 +16,8 @@ class MutationCluster(object):
     def count(self):
         return len(self.representations)
 
-class ReadReferenceRelationship(object):
 
+class ReadReferenceRelationship(object):
     def __init__(self, aligned_pair_index, aligned_pairs, reference_sequence, read_sequence, pam_index, n20_index, is_ngg):
         self.aligned_pair_index = aligned_pair_index
         self.aligned_pairs = aligned_pairs
@@ -87,7 +86,6 @@ class ReadReferenceRelationship(object):
 
 
 class DenotationIndex(object):
-
     def __init__(self, index, cutsite=False):
         self.index = index
         self.cutsite = cutsite
@@ -101,7 +99,6 @@ class DenotationIndex(object):
 
 
 class Cas9Denotations(object):
-
     def __init__(self, cutsite_index, pam_index, n20_pam_index, n20_index, aligned_pairs, is_ngg):
         self.cutsite_index = cutsite_index
         self.pam_index = pam_index
@@ -124,7 +121,6 @@ class Cas9Denotations(object):
         return denotation_indexes
 
     def apply_to_presentation(self, reference_presentation_array, read_presentation_array):
-
         reference_presentation_string = ''
         read_presentation_string = ''
         if len(self.filtered_denotation_indexes) > 0:
@@ -151,7 +147,6 @@ class Cas9Denotations(object):
 
 
 class ReferencePresenter(object):
-
     def __init__(self, reference):
         self.reference = reference
         self.mutation_clusters = sorted(self._cluster_reads_by_mutations_near_cutsite(reference).values(),
@@ -169,8 +164,14 @@ class ReferencePresenter(object):
     def pam(self):
         return self.reference.pam
 
+    def has_mutation_clusters(self):
+        return len(self.mutation_clusters) != 0
+
     def total_reads(self):
         return len(self.reference.reads)
+
+    def csv_row_prefix_cells(self):
+        return [self.name(), self.sequence(), self.n20(), self.pam(), self.total_reads()]
 
     def _cluster_reads_by_mutations_near_cutsite(self, reference):
         clusters = {}

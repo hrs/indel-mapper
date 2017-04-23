@@ -39,12 +39,11 @@ Example:
 ```shell
 python3 run.py -a ~/Documents/bowtie2_results.sam -r ~/Documents/references.csv -o ~/Documents/results.csv
 ```
-
-The arguments are:
+There are three required arguments:
 
 * `-a` or `--alignment` Alignment SAM file
 * `-r` or `--reference` Reference CSV file
-* `-o` or `--output` Filename to save the output as
+* `-o` or `--output` Output file, in CSV
 
 ## License
 

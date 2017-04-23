@@ -2,7 +2,8 @@ import re
 from .alignment import Alignment
 from .realigner import Realigner
 
-CUTSITE_REPRESENTATION = "||"
+CUTSITE_REPRESENTATION = "||" # string representation of where the cutsite is
+PAM_AND_N20_REPRESENTATION = "|" # string representation of the boundaries of the pam and n20
 
 class MutationCluster(object):
 
@@ -15,13 +16,6 @@ class MutationCluster(object):
 
     def count(self):
         return len(self.representations)
-
-
-class AlignmentRepresentation(object):
-
-    def __init__(self, read_representation, reference_representation):
-        self.read_representation = read_representation
-        self.reference_representation = reference_representation
 
 class ReadReferenceRelationship(object):
 
@@ -103,7 +97,7 @@ class DenotationIndex(object):
         if self.cutsite:
             return CUTSITE_REPRESENTATION
         else:
-            return "|"
+            return PAM_AND_N20_REPRESENTATION
 
 
 class Cas9Denotations(object):
@@ -182,7 +176,7 @@ class ReferencePresenter(object):
         clusters = {}
         for read in reference.reads_with_indels_near_the_cutsite:
             reference_representation, read_representation, cutsite_region = self.get_representations(reference, read)
-            alignment_representation = AlignmentRepresentation(read_representation, reference_representation)
+            alignment_representation = Alignment(reference_representation, read_representation)
             if cutsite_region in clusters:
                 clusters[cutsite_region].add_read(alignment_representation)
             else:
@@ -198,36 +192,45 @@ class ReferencePresenter(object):
 
     def compute_cas9_presentation(self, read_presentation_string):
         areas_of_interest = re.split("[-]+", read_presentation_string)
-        for index, area_of_interest in enumerate(areas_of_interest):
+        for area_of_interest in areas_of_interest:
             # there should be at least one | in one of the sections
             if "|" in area_of_interest:
                 return area_of_interest
         return ""
 
     def _realign(self, reference, read, cas9_region):
-        start_index = read.index(cas9_region)
-        end_index = start_index + len(cas9_region)
-        cas9_region_in_reference = reference[start_index:end_index]
-
-        if CUTSITE_REPRESENTATION not in cas9_region:
-            if read.startswith(cas9_region):
-                new_alignment = Realigner(
-                    Alignment(CUTSITE_REPRESENTATION + cas9_region_in_reference,
-                              CUTSITE_REPRESENTATION + cas9_region)).align()
-            else:
-                new_alignment = Realigner(Alignment(cas9_region_in_reference + CUTSITE_REPRESENTATION,
-                                                    cas9_region + CUTSITE_REPRESENTATION)).align()
-
-            new_read_cas9_region = new_alignment.read.replace(CUTSITE_REPRESENTATION, "")
-            new_reference_cas9_region = new_alignment.reference.replace(CUTSITE_REPRESENTATION, "")
-        else:
-            new_alignment = Realigner(Alignment(cas9_region_in_reference, cas9_region)).align()
-            new_read_cas9_region = new_alignment.read
-            new_reference_cas9_region = new_alignment.reference
+        cas9_region_in_reference = self._get_cas9_region_in_reference(reference, read, cas9_region)
+        new_reference_cas9_region, new_read_cas9_region = self._get_new_cas9_regions(reference,
+                                                                                     read,
+                                                                                     cas9_region_in_reference,
+                                                                                     cas9_region)
 
         new_read = read.replace(cas9_region, new_read_cas9_region)
         new_reference = reference.replace(cas9_region_in_reference, new_reference_cas9_region)
         return new_reference, new_read, new_read_cas9_region
+
+    def _get_new_cas9_regions(self, reference, read, cas9_region_in_reference, cas9_region_in_read):
+
+        if CUTSITE_REPRESENTATION not in cas9_region_in_read:
+            if read.startswith(cas9_region_in_read):
+                new_alignment = self._realign_cas9_region(CUTSITE_REPRESENTATION + cas9_region_in_reference,
+                                                          CUTSITE_REPRESENTATION + cas9_region_in_read)
+            else:
+                new_alignment = self._realign_cas9_region(cas9_region_in_reference + CUTSITE_REPRESENTATION,
+                                                          cas9_region_in_read + CUTSITE_REPRESENTATION)
+
+            return new_alignment.reference.replace(CUTSITE_REPRESENTATION, ""), new_alignment.read.replace(CUTSITE_REPRESENTATION, "")
+        else:
+            new_alignment = Realigner(Alignment(cas9_region_in_reference, cas9_region_in_read)).align()
+            return new_alignment.reference, new_alignment.read
+
+    def _get_cas9_region_in_reference(self, reference, read, cas9_region):
+        start_index = read.index(cas9_region)
+        end_index = start_index + len(cas9_region)
+        return reference[start_index:end_index]
+
+    def _realign_cas9_region(self, cas9_region_in_reference, cas9_region_in_read):
+        return Realigner(Alignment(cas9_region_in_reference, cas9_region_in_read)).align()
 
     def get_sequence_representation(self, reference, read):
         aligned_pairs = read.aligned_pairs

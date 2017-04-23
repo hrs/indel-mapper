@@ -1,12 +1,12 @@
 import unittest
 from .read import Read
+from .alignment import Alignment
 from .reference import Reference
 from .presenter import MutationCluster
 from .presenter import Presenter
 from .presenter import ReadReferenceRelationship
 from .presenter import DenotationIndex
 from .presenter import Cas9Denotations
-from .presenter import AlignmentRepresentation
 from .presenter import ReferencePresenter
 
 
@@ -14,10 +14,10 @@ class TestMutationCluster(unittest.TestCase):
 
     def test_mutation_cluster(self):
 
-        representation_a = AlignmentRepresentation(read_representation="-aaaa-",
-                                                   reference_representation="-aaat-")
-        representation_b = AlignmentRepresentation(read_representation="-cccc-",
-                                                   reference_representation="-ccct-")
+        representation_a = Alignment(read="-aaaa-",
+                                     reference="-aaat-")
+        representation_b = Alignment(read="-cccc-",
+                                     reference="-ccct-")
 
         cluster_key = "t-"
         cluster = MutationCluster(cluster_key, representation_a)
@@ -25,23 +25,8 @@ class TestMutationCluster(unittest.TestCase):
         cluster.add_read(representation_b)
 
         self.assertEqual(cluster.count(), 2)
-        self.assertEqual(cluster.representations[0].read_representation, representation_a.read_representation)
-        self.assertEqual(cluster.representations[1].read_representation, representation_b.read_representation)
-
-
-class TestAlignmentRepresentation(unittest.TestCase):
-
-    def test_alignment_representation(self):
-        read_representation = "AAA"
-        reference_representation = "ATA"
-
-        alignment_representation = AlignmentRepresentation(read_representation,
-                                                           reference_representation)
-
-        self.assertEqual(alignment_representation.read_representation,
-                         read_representation)
-        self.assertEqual(alignment_representation.reference_representation,
-                         reference_representation)
+        self.assertEqual(cluster.representations[0].read, representation_a.read)
+        self.assertEqual(cluster.representations[1].read, representation_b.read)
 
 
 class TestReadReferenceRelationship(unittest.TestCase):
@@ -307,7 +292,6 @@ class TestPresenter(unittest.TestCase):
 
         return Reference(name, self.n20, self.sequence, self.pam, reads)
 
-
     def test_reference_presenter_results(self):
 
         references = [self.create_test_reference("foo"), self.create_test_reference("bar")]
@@ -343,12 +327,14 @@ class TestPresenter(unittest.TestCase):
         self.assertEqual(mutation_clusters[1].count(), 1)
         self.assertEqual(mutation_clusters[2].count(), 1)
 
-        expected = [('A___||_T', 'A___||_T', 'AAAT||TT'), ('|AAAAT||TGGGG', '---|AAAAT||TGGGG', '---|AAAAT||____T'), ('C|TTTAAATTTTAT||T', 'C|TTTAAATTTTAT||T', 'C|___AAA____AT||T')]
+        expected = [('A___||_T', 'A___||_T', 'AAAT||TT'),
+                    ('|AAAAT||TGGGG', '---|AAAAT||TGGGG', '---|AAAAT||____T'),
+                    ('C|TTTAAATTTTAT||T', 'C|TTTAAATTTTAT||T', 'C|___AAA____AT||T')]
 
         actual = []
         for cluster in mutation_clusters:
             representation = cluster.representations
-            got = (cluster.cutsite_region, representation[0].read_representation, representation[0].reference_representation)
+            got = (cluster.cutsite_region, representation[0].read, representation[0].reference)
             actual.append(got)
 
         self.assertEqual(sorted(expected), sorted(actual))

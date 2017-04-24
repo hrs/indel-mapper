@@ -3,6 +3,9 @@ class Alignment(object):
         self.reference = reference
         self.read = read
 
+    def description(self):
+        return SequenceDiff(self.reference, self.read).description()
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return (other.reference == self.reference and

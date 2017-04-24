@@ -338,3 +338,67 @@ class TestPresenter(unittest.TestCase):
             actual.append(got)
 
         self.assertEqual(sorted(expected), sorted(actual))
+
+
+class TestCSVExport(unittest.TestCase):
+
+    def create_aligned_pairs(self, read_sequence, reference_positions):
+        return tuple(zip(range(len(read_sequence)), reference_positions))
+
+    def create_test_reference(self, name):
+        self.n20 = "aaaatttc"
+        self.sequence = "tactactacaaaatttcnggt"
+        self.pam = "ngg"
+
+        reference_positions_a = [8, None, None, None, 9, 10, 11, None, None, None, None, 12, 13, 14]
+        seq_a = "ctttaaattttatt"
+        read_a = Read("a", reference_positions_a, seq_a, self.create_aligned_pairs(seq_a, reference_positions_a))
+
+        reference_positions_b = [10, 15]
+        seq_b = "at"
+        read_b = Read("b", reference_positions_b, seq_b, ((0,10),(None, 11), (None, 12), (None, 13), (None, 14), (1, 15)))
+
+        reference_positions_c = [10, 11, 12, 13, 14]
+        seq_c = "aaatt"
+        read_c = Read("c", reference_positions_c, seq_a, self.create_aligned_pairs(seq_c, reference_positions_c))
+
+        reference_positions_d = [6, 7, 8, 9, 10, 11, 12, 13, None, None, None, None, 14]
+        seq_d = "tacaaaattggggt"
+        read_d = Read("d", reference_positions_d, seq_d, self.create_aligned_pairs(seq_d, reference_positions_d))
+
+        reference_positions_e = [18, 20]
+        seq_e = "gt"
+        read_e = Read("e", reference_positions_e, seq_e, ((0,18),(None, 19),(1,20)))
+
+        reference_positions_f = [None, None, None, 0, 1, 2]
+        seq_f = "gggtac"
+        read_f = Read("f", reference_positions_f, seq_f, self.create_aligned_pairs(seq_f, reference_positions_f))
+
+        reads = [read_a, read_b, read_c, read_d, read_e, read_f]
+
+        return Reference(name, self.n20, self.sequence, self.pam, reads)
+
+    def test_get_csv_rows(self):
+        references = [self.create_test_reference("foo"), self.create_test_reference("bar")]
+
+        test_presenter = Presenter(references)
+        results = test_presenter.get_csv_rows()
+
+        expected_header = ["Name", "Total Reads", "Cluster", "Cluster Count"]
+
+        expected_foo_rows = [["foo", 6, 'A___||_T', 1],
+                             ["foo", 6, '---|AAAAT||TGGGG', 1],
+                             ["foo", 6, 'C|TTTAAATTTTAT||T', 1]]
+
+        expected_bar_rows = [["bar", 6, 'A___||_T', 1],
+                             ["bar", 6, '---|AAAAT||TGGGG', 1],
+                             ["bar", 6, 'C|TTTAAATTTTAT||T', 1]]
+
+        result_foo_rows = results[1:4]
+        result_bar_rows = results[4:]
+
+        self.assertEqual(len(results), 1 + len(expected_foo_rows) + len(expected_bar_rows))
+        self.assertEqual(results[0], expected_header)
+
+        self.assertTrue(len([result for result in result_foo_rows if result in expected_foo_rows]) == len(result_foo_rows))
+        self.assertTrue(len([result for result in result_bar_rows if result in expected_bar_rows]) == len(result_bar_rows))

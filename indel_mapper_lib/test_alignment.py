@@ -7,3 +7,7 @@ class TestAlignment(unittest.TestCase):
                          Alignment("foo", "bar"))
         self.assertNotEqual(Alignment("foo", "bar"),
                             Alignment("bar", "foo"))
+
+    def test_repr(self):
+        self.assertEqual(str(Alignment("foo", "bar")),
+                         "(foo, bar)")

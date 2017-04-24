@@ -1,4 +1,4 @@
-class Alignment:
+class Alignment(object):
     def __init__(self, reference, read):
         self.reference = reference
         self.read = read

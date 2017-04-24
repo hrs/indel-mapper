@@ -13,7 +13,8 @@ class TabularReferenceExporter(object):
 
     def _rows_for(self, ref):
         rows = []
-        prefix_cells = ref.csv_row_prefix_cells()
+        prefix_cells = [ref.name(), ref.sequence(), ref.n20(), ref.pam(),
+                        ref.total_reads()]
 
         if ref.has_mutation_clusters():
             for cluster in ref.mutation_clusters:

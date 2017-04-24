@@ -171,9 +171,6 @@ class ReferencePresenter(object):
     def has_mutation_clusters(self):
         return len(self.mutation_clusters) != 0
 
-    def csv_row_prefix_cells(self):
-        return [self.name(), self.sequence(), self.n20(), self.pam(), self.total_reads()]
-
     def get_representations(self, reference, read):
         reference_rep_array, read_rep_array = self.get_sequence_representation(reference, read)
         reference_representation_with_sites, read_representation_with_sites = self.denote_cas9_sites(

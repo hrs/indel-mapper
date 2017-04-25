@@ -1,3 +1,6 @@
+from .sequence_diff import SequenceDiff
+
+
 class Alignment(object):
     def __init__(self, reference, read):
         self.reference = reference

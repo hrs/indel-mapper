@@ -4,13 +4,15 @@ from .diff_components import DiffDeletion
 from .diff_components import DiffInsertion
 from .diff_components import DiffMatch
 from .diff_components import DiffMetadata
+from .diff_components import DiffMutation
 
 
 class DiffState(Enum):
-    MATCH = 1
+    DELETION = 1
     INSERTION = 2
-    DELETION = 3
+    MATCH = 3
     METADATA = 4
+    MUTATION = 5
 
 
 class SequenceDiff(object):
@@ -19,6 +21,7 @@ class SequenceDiff(object):
         DiffState.INSERTION: DiffInsertion,
         DiffState.MATCH: DiffMatch,
         DiffState.METADATA: DiffMetadata,
+        DiffState.MUTATION: DiffMutation,
     }
 
     def __init__(self, original, changed):
@@ -41,7 +44,8 @@ class SequenceDiff(object):
         return desc
 
     def _change_tokens(self, original, changed):
-        curr = ""
+        curr_ref = ""
+        curr_read = ""
         state = DiffState.MATCH
         tokens = []
 
@@ -50,51 +54,67 @@ class SequenceDiff(object):
             # Begin/continue reading a DiffMetadata
             if base_1 == "|" and base_2 == "|":
                 if state == DiffState.METADATA:
-                    curr += "|"
+                    curr_ref += base_1
+                    curr_read += base_2
                 else:
-                    tokens.append(self._create_diff(curr, state))
-                    curr = "|"
+                    tokens.append(self._create_diff(curr_ref, curr_read, state))
+                    curr_ref = "|"
+                    curr_read = "|"
                     state = DiffState.METADATA
 
             # Begin/continue reading a DiffMatch
             elif base_1 == base_2:
                 if state == DiffState.MATCH:
-                    curr += base_1
+                    curr_ref += base_1
+                    curr_read += base_2
                 else:
-                    tokens.append(self._create_diff(curr, state))
-                    curr = base_1
+                    tokens.append(self._create_diff(curr_ref, curr_read, state))
+                    curr_ref = base_1
+                    curr_read = base_2
                     state = DiffState.MATCH
 
             # Begin/continue reading a DiffInsertion
             elif base_1 == "_":
                 if state == DiffState.INSERTION:
-                    curr += base_2
+                    curr_ref += base_1
+                    curr_read += base_2
                 else:
-                    tokens.append(self._create_diff(curr, state))
-                    curr = base_2
+                    tokens.append(self._create_diff(curr_ref, curr_read, state))
+                    curr_ref = base_1
+                    curr_read = base_2
                     state = DiffState.INSERTION
 
             # Begin/continue reading a DiffDeletion
             elif base_2 == "_":
                 if state == DiffState.DELETION:
-                    curr += base_1
+                    curr_ref += base_1
+                    curr_read += base_2
                 else:
-                    tokens.append(self._create_diff(curr, state))
-                    curr = base_1
+                    tokens.append(self._create_diff(curr_ref, curr_read, state))
+                    curr_ref = base_1
+                    curr_read = base_2
                     state = DiffState.DELETION
 
+            # If the bases don't match, this must be a DiffMutation
             else:
-                raise ValueError("Can't diff bases \"{}\" and \"{}\"".format(base_1, base_2))
+                if state == DiffState.MUTATION:
+                    curr_ref += base_1
+                    curr_read += base_2
+                else:
+                    tokens.append(self._create_diff(curr_ref, curr_read, state))
+                    curr_ref = base_1
+                    curr_read = base_2
+                    state = DiffState.MUTATION
 
         # Append the last token
-        if curr != "":
-            tokens.append(self._create_diff(curr, state))
+        if curr_read != "":
+            tokens.append(self._create_diff(curr_ref, curr_read, state))
 
         return tokens
 
-    def _create_diff(self, sequence, state):
+    def _create_diff(self, ref_seq, read_seq, state):
         if state in self.STATE_MAP:
-            return self.STATE_MAP[state](sequence)
+            return self.STATE_MAP[state](ref_seq, read_seq)
         else:
             raise ValueError("Unknown diff state \"{}\"".format(state))
 

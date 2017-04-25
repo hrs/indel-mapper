@@ -4,54 +4,67 @@ from .diff_components import DiffDeletion
 from .diff_components import DiffInsertion
 from .diff_components import DiffMatch
 from .diff_components import DiffMetadata
+from .diff_components import DiffMutation
 
 
 class TestDiffDeletion(unittest.TestCase):
     def test_is_match(self):
-        self.assertFalse(DiffDeletion("ACT").is_match())
+        self.assertFalse(DiffDeletion("ACT", "___").is_match())
 
     def test_is_metadata(self):
-        self.assertFalse(DiffDeletion("ACT").is_metadata())
+        self.assertFalse(DiffDeletion("ACT", "___").is_metadata())
 
     def test_repr(self):
-        self.assertEqual(str(DiffDeletion("A")),
+        self.assertEqual(str(DiffDeletion("A", "_")),
                          "1 deletion (A)")
-        self.assertEqual(str(DiffDeletion("ACT")),
+        self.assertEqual(str(DiffDeletion("ACT", "___")),
                          "3 deletions (ACT)")
 
 
 class TestDiffInsertion(unittest.TestCase):
     def test_is_match(self):
-        self.assertFalse(DiffInsertion("ACT").is_match())
+        self.assertFalse(DiffInsertion("___", "ACT").is_match())
 
     def test_is_metadata(self):
-        self.assertFalse(DiffInsertion("ACT").is_metadata())
+        self.assertFalse(DiffInsertion("___", "ACT").is_metadata())
 
     def test_repr(self):
-        self.assertEqual(str(DiffInsertion("A")),
+        self.assertEqual(str(DiffInsertion("_", "A")),
                          "1 insertion (A)")
-        self.assertEqual(str(DiffInsertion("ACT")),
+        self.assertEqual(str(DiffInsertion("___", "ACT")),
                          "3 insertions (ACT)")
 
 
 class TestDiffMatch(unittest.TestCase):
     def test_is_match(self):
-        self.assertTrue(DiffMatch("ACT").is_match())
+        self.assertTrue(DiffMatch("ACT", "ACT").is_match())
 
     def test_is_metadata(self):
-        self.assertFalse(DiffMatch("ACT").is_metadata())
+        self.assertFalse(DiffMatch("ACT", "ACT").is_metadata())
 
     def test_repr(self):
-        self.assertEqual(str(DiffMatch("A")), "1 match")
-        self.assertEqual(str(DiffMatch("ACT")), "3 matches")
+        self.assertEqual(str(DiffMatch("A", "A")), "1 match")
+        self.assertEqual(str(DiffMatch("ACT", "ACT")), "3 matches")
 
 
 class TestDiffMetadata(unittest.TestCase):
     def test_is_match(self):
-        self.assertFalse(DiffMetadata("||").is_match())
+        self.assertFalse(DiffMetadata("||", "||").is_match())
 
     def test_is_metadata(self):
-        self.assertTrue(DiffMetadata("||").is_metadata())
+        self.assertTrue(DiffMetadata("||", "||").is_metadata())
 
     def test_repr(self):
-        self.assertEqual(str(DiffMetadata("||")), "||")
+        self.assertEqual(str(DiffMetadata("||", "||")), "||")
+
+
+class TestDiffMutation(unittest.TestCase):
+    def test_is_match(self):
+        self.assertFalse(DiffMutation("ACT", "GTA").is_match())
+
+    def test_is_metadata(self):
+        self.assertFalse(DiffMutation("ACT", "GTA").is_metadata())
+
+    def test_repr(self):
+        self.assertEqual(str(DiffMutation("A", "G")), "1 mutation (A to G)")
+        self.assertEqual(str(DiffMutation("ACT", "GTA")), "3 mutations (ACT to GTA)")

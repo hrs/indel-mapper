@@ -244,15 +244,15 @@ class TestReferencePresenter(unittest.TestCase):
 
     def test_realign(self):
         test_reference_presenter = ReferencePresenter(Reference("foo", "", "", "", []))
-        reference = "CAG|A__________GG|TC--------"
-        read = "CAT|AAAATCTTTGAGG|GC--------"
+        alignment = Alignment("CAG|A__________GG|TC--------",
+                              "CAT|AAAATCTTTGAGG|GC--------")
         cas9_region = "CAT|AAAATCTTTGAGG|GC"
 
-        new_reference, new_read, new_cas9_region = test_reference_presenter._realign(reference, read, cas9_region)
+        new_alignment, new_cas9_region = test_reference_presenter._realign(alignment, cas9_region)
 
-        self.assertEqual(new_read, read)
+        self.assertEqual(new_alignment.read, alignment.read)
         self.assertEqual(new_cas9_region, cas9_region)
-        self.assertEqual(new_reference, "CAG|__________AGG|TC--------")
+        self.assertEqual(new_alignment.reference, "CAG|__________AGG|TC--------")
 
 class TestPresenter(unittest.TestCase):
 

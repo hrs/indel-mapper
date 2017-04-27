@@ -3,7 +3,6 @@ from enum import Enum
 from .diff_components import DiffDeletion
 from .diff_components import DiffInsertion
 from .diff_components import DiffMatch
-from .diff_components import DiffMetadata
 from .diff_components import DiffMutation
 
 
@@ -11,8 +10,7 @@ class DiffState(Enum):
     DELETION = 1
     INSERTION = 2
     MATCH = 3
-    METADATA = 4
-    MUTATION = 5
+    MUTATION = 4
 
 
 class SequenceDiff(object):
@@ -20,7 +18,6 @@ class SequenceDiff(object):
         DiffState.DELETION: DiffDeletion,
         DiffState.INSERTION: DiffInsertion,
         DiffState.MATCH: DiffMatch,
-        DiffState.METADATA: DiffMetadata,
         DiffState.MUTATION: DiffMutation,
     }
 
@@ -29,19 +26,8 @@ class SequenceDiff(object):
         self.changes = self._change_tokens(original, changed)
 
     def description(self):
-        relevant_changes = self._strip_end_matches(self.changes)
-        desc = ""
-
-        for first, second in zip(relevant_changes, relevant_changes[1:]):
-            desc += str(first)
-            if first.is_metadata() or second.is_metadata():
-                desc += " "
-            else:
-                desc += ", "
-
-        desc += str(relevant_changes[-1])
-
-        return desc
+        without_trailing_matches = self._strip_end_matches(self.changes)
+        return ", ".join([str(change) for change in without_trailing_matches])
 
     def _change_tokens(self, original, changed):
         curr_ref = ""
@@ -51,16 +37,9 @@ class SequenceDiff(object):
 
         # Compare each pair of bases
         for base_1, base_2 in zip(original, changed):
-            # Begin/continue reading a DiffMetadata
+            # Skip metadata (like | and ||)
             if base_1 == "|" and base_2 == "|":
-                if state == DiffState.METADATA:
-                    curr_ref += base_1
-                    curr_read += base_2
-                else:
-                    tokens.append(self._create_diff(curr_ref, curr_read, state))
-                    curr_ref = "|"
-                    curr_read = "|"
-                    state = DiffState.METADATA
+                pass
 
             # Begin/continue reading a DiffMatch
             elif base_1 == base_2:

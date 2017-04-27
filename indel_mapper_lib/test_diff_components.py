@@ -3,16 +3,12 @@ import unittest
 from .diff_components import DiffDeletion
 from .diff_components import DiffInsertion
 from .diff_components import DiffMatch
-from .diff_components import DiffMetadata
 from .diff_components import DiffMutation
 
 
 class TestDiffDeletion(unittest.TestCase):
     def test_is_match(self):
         self.assertFalse(DiffDeletion("ACT", "___").is_match())
-
-    def test_is_metadata(self):
-        self.assertFalse(DiffDeletion("ACT", "___").is_metadata())
 
     def test_repr(self):
         self.assertEqual(str(DiffDeletion("A", "_")),
@@ -25,9 +21,6 @@ class TestDiffInsertion(unittest.TestCase):
     def test_is_match(self):
         self.assertFalse(DiffInsertion("___", "ACT").is_match())
 
-    def test_is_metadata(self):
-        self.assertFalse(DiffInsertion("___", "ACT").is_metadata())
-
     def test_repr(self):
         self.assertEqual(str(DiffInsertion("_", "A")),
                          "1 insertion (A)")
@@ -39,31 +32,14 @@ class TestDiffMatch(unittest.TestCase):
     def test_is_match(self):
         self.assertTrue(DiffMatch("ACT", "ACT").is_match())
 
-    def test_is_metadata(self):
-        self.assertFalse(DiffMatch("ACT", "ACT").is_metadata())
-
     def test_repr(self):
         self.assertEqual(str(DiffMatch("A", "A")), "1 match")
         self.assertEqual(str(DiffMatch("ACT", "ACT")), "3 matches")
 
 
-class TestDiffMetadata(unittest.TestCase):
-    def test_is_match(self):
-        self.assertFalse(DiffMetadata("||", "||").is_match())
-
-    def test_is_metadata(self):
-        self.assertTrue(DiffMetadata("||", "||").is_metadata())
-
-    def test_repr(self):
-        self.assertEqual(str(DiffMetadata("||", "||")), "||")
-
-
 class TestDiffMutation(unittest.TestCase):
     def test_is_match(self):
         self.assertFalse(DiffMutation("ACT", "GTA").is_match())
-
-    def test_is_metadata(self):
-        self.assertFalse(DiffMutation("ACT", "GTA").is_metadata())
 
     def test_repr(self):
         self.assertEqual(str(DiffMutation("A", "G")), "1 mutation (A to G)")

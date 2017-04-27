@@ -8,9 +8,6 @@ class DiffComponent(object):
     def is_match(self):
         return False
 
-    def is_metadata(self):
-        return False
-
     def __eq__(self, other):
         return (isinstance(other, self.__class__) and
                 other.ref_seq == self.ref_seq and
@@ -45,14 +42,6 @@ class DiffDeletion(DiffComponent):
         if self._size() > 1:
             name = "deletions"
         return "{} {} ({})".format(self._size(), name, self.ref_seq)
-
-
-class DiffMetadata(DiffComponent):
-    def is_metadata(self):
-        return True
-
-    def __repr__(self):
-        return self.read_seq
 
 
 class DiffMutation(DiffComponent):

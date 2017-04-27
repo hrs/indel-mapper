@@ -17,7 +17,7 @@ def get_args():
 def write_csv(filename, results):
     output_file = open(filename, "w")
     writer = csv.writer(output_file)
-    header = ["Name", "Sequence", "N20", "PAM", "Total Reads", "Cutsite", "Count", "Reference", "Read"]
+    header = ["Name", "Total Reads", "Reference Cas9 Region", "Read Cas9 Region", "Description", "Count"]
 
     writer.writerow(header)
     for reference_presenter in results:
@@ -29,11 +29,7 @@ def write_reference(writer, reference_presenter):
     prefix_cells = reference_presenter.csv_row_prefix_cells()
     if reference_presenter.has_mutation_clusters():
         for cluster in reference_presenter.mutation_clusters:
-            cluster_info = [cluster.cutsite_region, cluster.count()]
-            for sequence in cluster.representations:
-                writer.writerow(prefix_cells + cluster_info + [sequence.reference, sequence.read])
-            if cluster.count() == 0:
-                writer.writerow(prefix_cells + cluster_info)
+            writer.writerow(prefix_cells + cluster.csv_row())
     else:
         writer.writerow(prefix_cells)
 

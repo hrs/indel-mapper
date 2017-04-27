@@ -14,19 +14,29 @@ class TestMutationCluster(unittest.TestCase):
 
     def test_mutation_cluster(self):
 
-        representation_a = Alignment(read="-aaaa-",
-                                     reference="-aaat-")
-        representation_b = Alignment(read="-cccc-",
-                                     reference="-ccct-")
+        alignment_a = Alignment(read="-aaa|a-",
+                                reference="-aaa|t-")
 
-        cluster_key = "t-"
-        cluster = MutationCluster(cluster_key, representation_a)
+        alignment_b = Alignment(read="-ccc|g-",
+                                reference="-ccc|t-")
 
-        cluster.add_read(representation_b)
+        cas9_region = Alignment(reference="caa", read="gta")
+
+        cluster = MutationCluster(alignment_a, cas9_region)
+
+        cluster.add_read(alignment_b)
 
         self.assertEqual(cluster.count(), 2)
-        self.assertEqual(cluster.representations[0].read, representation_a.read)
-        self.assertEqual(cluster.representations[1].read, representation_b.read)
+        self.assertEqual(cluster.cas9_region.read, cas9_region.read)
+        self.assertEqual(cluster.cas9_region.reference, cas9_region.reference)
+        self.assertEqual(cluster.alignments[0].read, alignment_a.read)
+        self.assertEqual(cluster.alignments[0].reference, alignment_a.reference)
+        self.assertEqual(cluster.alignments[1].read, alignment_b.read)
+        self.assertEqual(cluster.alignments[1].reference, alignment_b.reference)
+        self.assertEqual(cluster.description, "2 mutations (ca to gt)")
+
+        csv_row = cluster.csv_row()
+        self.assertEqual(csv_row, [cas9_region.reference, cas9_region.read, "2 mutations (ca to gt)", 2])
 
 
 class TestReadReferenceRelationship(unittest.TestCase):
@@ -242,17 +252,21 @@ class TestCas9Denotations(unittest.TestCase):
 
 class TestReferencePresenter(unittest.TestCase):
 
-    def test_realign(self):
-        test_reference_presenter = ReferencePresenter(Reference("foo", "", "", "", []))
+    def test_reference_presenter(self):
+        ref = ReferencePresenter(Reference("foo", "", "", "", []))
         alignment = Alignment("CAG|A__________GG|TC--------",
                               "CAT|AAAATCTTTGAGG|GC--------")
-        cas9_region = "CAT|AAAATCTTTGAGG|GC"
+        cas9_region = Alignment("CAG|A__________GG|TC",
+                                "CAT|AAAATCTTTGAGG|GC")
 
-        new_alignment, new_cas9_region = test_reference_presenter._realign(alignment, cas9_region)
+        new_alignment, new_cas9_region = ref._realign(alignment, cas9_region)
 
         self.assertEqual(new_alignment.read, alignment.read)
-        self.assertEqual(new_cas9_region, cas9_region)
+        self.assertEqual(new_cas9_region.read, cas9_region.read)
         self.assertEqual(new_alignment.reference, "CAG|__________AGG|TC--------")
+
+        self.assertEqual(ref.csv_row_prefix_cells(), ["foo", 0])
+
 
 class TestPresenter(unittest.TestCase):
 
@@ -333,8 +347,7 @@ class TestPresenter(unittest.TestCase):
 
         actual = []
         for cluster in mutation_clusters:
-            representation = cluster.representations
-            got = (cluster.cutsite_region, representation[0].read, representation[0].reference)
+            got = (cluster.cas9_region.read, cluster.alignments[0].read, cluster.alignments[0].reference)
             actual.append(got)
 
         self.assertEqual(sorted(expected), sorted(actual))

@@ -1,20 +1,25 @@
 import re
 from .alignment import Alignment
 from .realigner import Realigner
+from .sequence_diff import SequenceDiff
 
 CUTSITE_REPRESENTATION = "||" # string representation of where the cutsite is
 PAM_AND_N20_REPRESENTATION = "|" # string representation of the boundaries of the pam and n20
 
 class MutationCluster(object):
-    def __init__(self, cutsite_region, representation):
-        self.cutsite_region = cutsite_region
-        self.representations = [representation]
+    def __init__(self, marked_alignment, marked_cas9_region):
+        self.cas9_region = marked_cas9_region
+        self.alignments = [marked_alignment]
+        self.description = SequenceDiff(marked_cas9_region.reference, marked_cas9_region.read).description()
 
     def add_read(self, representation):
-        self.representations.append(representation)
+        self.alignments.append(representation)
 
     def count(self):
-        return len(self.representations)
+        return len(self.alignments)
+
+    def csv_row(self):
+        return [self.cas9_region.reference, self.cas9_region.read, self.description, self.count()]
 
 
 class ReadReferenceRelationship(object):
@@ -171,31 +176,37 @@ class ReferencePresenter(object):
         return len(self.reference.reads)
 
     def csv_row_prefix_cells(self):
-        return [self.name(), self.sequence(), self.n20(), self.pam(), self.total_reads()]
+        return [self.name(), self.total_reads()]
 
     def _cluster_reads_by_mutations_near_cutsite(self, reference):
         """Reference -> {String: MutationCluster}"""
         clusters = {}
         for read in reference.reads_with_indels_near_the_cutsite:
-            alignment_representation, cutsite_region = self.get_representations(reference, read)
-            if cutsite_region in clusters:
-                clusters[cutsite_region].add_read(alignment_representation)
+            marked_sequence_alignment, marked_cas9_region = self._get_marked_alignments(reference, read)
+            if marked_cas9_region.read in clusters:
+                clusters[marked_cas9_region.read].add_read(marked_sequence_alignment)
             else:
-                clusters[cutsite_region] = MutationCluster(cutsite_region, alignment_representation)
+                clusters[marked_cas9_region.read] = MutationCluster(marked_sequence_alignment, marked_cas9_region)
         return clusters
 
-    def get_representations(self, reference, read):
+    def _get_marked_alignments(self, reference, read):
         """Reference, Read -> Alignment, String"""
-        reference_rep_array, read_rep_array = self.get_sequence_representation(reference, read)
-        reference_representation_with_sites, read_representation_with_sites = self.denote_cas9_sites(
-            reference_rep_array, read_rep_array, reference, read)
-        representation_with_sites = Alignment(reference_representation_with_sites, read_representation_with_sites)
-        cas9_region = self.compute_cas9_presentation(representation_with_sites.read)
-        return self._realign(representation_with_sites, cas9_region)
+        reference_as_array, read_as_array = self.get_sequence_representation(reference, read)
+        reference_string_with_cas9_markers, read_string_with_cas9_markers = self.denote_cas9_sites(
+            reference_as_array, read_as_array, reference, read)
+        alignment_with_markers = Alignment(reference_string_with_cas9_markers, read_string_with_cas9_markers)
+        cas9_region = self._compute_cas9_region(alignment_with_markers)
+        return self._realign(alignment_with_markers, cas9_region)
 
-    def compute_cas9_presentation(self, read_presentation_string):
+    def _compute_cas9_region(self, alignment):
+        """Alignment -> Alignment"""
+        cas9_region_in_read = self._get_cas9_region(alignment.read)
+        cas9_region_in_reference = self._get_cas9_region(alignment.reference)
+        return Alignment(cas9_region_in_reference, cas9_region_in_read)
+
+    def _get_cas9_region(self, read):
         """String -> String"""
-        areas_of_interest = re.split("[-]+", read_presentation_string)
+        areas_of_interest = re.split("[-]+", read)
         for area_of_interest in areas_of_interest:
             # there should be at least one | in one of the sections
             if "|" in area_of_interest:
@@ -203,14 +214,12 @@ class ReferencePresenter(object):
         return ""
 
     def _realign(self, alignment, cas9_region):
-        """Alignment, String -> Alignment, String"""
-        cas9_region_in_reference = self._get_cas9_region_in_reference(alignment, cas9_region)
-        new_cas9_region = self._get_new_cas9_regions(alignment,
-                                                     Alignment(cas9_region_in_reference, cas9_region))
+        """Alignment, String -> Alignment, Alignment"""
+        new_cas9_region = self._get_new_cas9_regions(alignment, cas9_region)
 
-        new_alignment = Alignment(alignment.reference.replace(cas9_region_in_reference, new_cas9_region.reference),
-                                  alignment.read.replace(cas9_region, new_cas9_region.read))
-        return new_alignment, new_cas9_region.read
+        new_alignment = Alignment(alignment.reference.replace(cas9_region.reference, new_cas9_region.reference),
+                                  alignment.read.replace(cas9_region.read, new_cas9_region.read))
+        return new_alignment, new_cas9_region
 
     def _get_new_cas9_regions(self, alignment, cas9_region):
         """Alignment, Alignment -> Alignment"""
@@ -226,12 +235,6 @@ class ReferencePresenter(object):
                              new_alignment.read.replace(CUTSITE_REPRESENTATION, ""))
         else:
             return Realigner(cas9_region).align()
-
-    def _get_cas9_region_in_reference(self, alignment, cas9_region):
-        """Alignment, String -> String"""
-        start_index = alignment.read.index(cas9_region)
-        end_index = start_index + len(cas9_region)
-        return alignment.reference[start_index:end_index]
 
     def get_sequence_representation(self, reference, read):
         """Reference, Read -> [Char], [Char]"""

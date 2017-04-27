@@ -11,3 +11,7 @@ footer {
 	bottom: 0px;
 	padding-bottom: 10px;
 }
+
+.cluster_accordion {
+	margin-bottom: -10px;
+}

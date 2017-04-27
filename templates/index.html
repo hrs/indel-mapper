@@ -62,7 +62,7 @@
           {% for cluster in reference_presenter.mutation_clusters %}
           <h3>Cutsite: {{ cluster.description }} ----- ({{ cluster.count() }})
             <span class="sequence tiny-text">
-              <p class="cluster_accordion" >{{ cluster.cas9_region.reference }}</p>
+              <p>{{ cluster.cas9_region.reference }}</p>
               <p>{{ cluster.cas9_region.read }}</p>
             </span>
           </h3>

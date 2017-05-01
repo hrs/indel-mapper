@@ -21,6 +21,29 @@ class MutationCluster(object):
     def csv_row(self):
         return [self.cas9_region.reference, self.cas9_region.read, self.description, self.count()]
 
+    def is_interesting(self):
+        if CUTSITE_REPRESENTATION in self.cas9_region.read:
+            index_of_cutsite = self.cas9_region.read.index("||")
+            left_of_cutsite = index_of_cutsite - 1
+            right_of_cutsite = index_of_cutsite + 1
+            left_is_interesting = False
+            right_is_interesting = False
+            if left_of_cutsite >= 0:
+                left_is_interesting = self._is_indel_or_mutation(self.cas9_region.reference[left_of_cutsite],
+                                                                 self.cas9_region.read[left_of_cutsite])
+            if right_of_cutsite < len(self.cas9_region.read):
+                right_is_interesting = self._is_indel_or_mutation(self.cas9_region.reference[right_of_cutsite],
+                                                                 self.cas9_region.read[right_of_cutsite])
+            return left_is_interesting or right_is_interesting
+        elif self.alignments[0].read.startswith(self.cas9_region.read):
+            return self._is_indel_or_mutation(self.cas9_region.reference[0], self.cas9_region.read[0])
+        else:
+            return self._is_indel_or_mutation(self.cas9_region.reference[-1], self.cas9_region.read[-1])
+
+    def _is_indel_or_mutation(self, reference_base, read_base):
+        return reference_base == "_" or read_base == "_" or reference_base != read_base
+
+
 
 class ReadReferenceRelationship(object):
     def __init__(self, aligned_pair_index, aligned_pairs, reference_sequence, read_sequence, pam_index, n20_index, is_ngg):
@@ -154,8 +177,7 @@ class Cas9Denotations(object):
 class ReferencePresenter(object):
     def __init__(self, reference):
         self.reference = reference
-        self.mutation_clusters = sorted(self._cluster_reads_by_mutations_near_cutsite(reference).values(),
-                                        key=lambda cluster: cluster.count(), reverse=True)
+        self.mutation_clusters = self._generate_clusters(reference)
 
     def name(self):
         return self.reference.name
@@ -178,15 +200,25 @@ class ReferencePresenter(object):
     def csv_row_prefix_cells(self):
         return [self.name(), self.total_reads()]
 
+    def _generate_clusters(self, reference):
+        all_clusters = self._cluster_reads_by_mutations_near_cutsite(reference).values()
+        interesting_clusters = [cluster for cluster in all_clusters if cluster.is_interesting()]
+        return sorted(interesting_clusters,
+                      key=lambda cluster: cluster.count(), reverse=True)
+
     def _cluster_reads_by_mutations_near_cutsite(self, reference):
         """Reference -> {String: MutationCluster}"""
         clusters = {}
         for read in reference.reads_with_indels_near_the_cutsite:
             marked_sequence_alignment, marked_cas9_region = self._get_marked_alignments(reference, read)
-            if marked_cas9_region.read in clusters:
-                clusters[marked_cas9_region.read].add_read(marked_sequence_alignment)
-            else:
-                clusters[marked_cas9_region.read] = MutationCluster(marked_sequence_alignment, marked_cas9_region)
+            # we have no way of telling what happens next to the cutsite since a
+            # cas9 region < 9 (3 pam, 3 base into the N20, 2 bars, and one extra)
+            # means the read doesn't overlap with the cutsite
+            if (CUTSITE_REPRESENTATION in marked_cas9_region.read) or (len(marked_cas9_region.read) >= 9):
+                if marked_cas9_region.read in clusters:
+                    clusters[marked_cas9_region.read].add_read(marked_sequence_alignment)
+                else:
+                    clusters[marked_cas9_region.read] = MutationCluster(marked_sequence_alignment, marked_cas9_region)
         return clusters
 
     def _get_marked_alignments(self, reference, read):

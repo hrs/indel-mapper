@@ -38,6 +38,31 @@ class TestMutationCluster(unittest.TestCase):
         csv_row = cluster.csv_row()
         self.assertEqual(csv_row, [cas9_region.reference, cas9_region.read, "2 mutations (ca to gt)", 2])
 
+    def test_is_interesting(self):
+        alignment = Alignment(read="-A|GGG_||AAA|AGG|T-", reference="-A|GGGG||AAA|AGG|T-")
+        cas9_region = Alignment(read="A|GGG_||AAA|AGG|T", reference="A|GGGG||AAA|AGG|T")
+        cluster = MutationCluster(alignment, cas9_region)
+        self.assertEqual(cluster.is_interesting(), True)
+
+        alignment = Alignment(read="-A|GGGG||ATT|AGG|T-", reference="-A|GGGG||A_T|AGG|T-")
+        cas9_region = Alignment(read="A|GGGG||ATT|AGG|T", reference="A|GGGG||A_T|AGG|T")
+        cluster = MutationCluster(alignment, cas9_region)
+        self.assertEqual(cluster.is_interesting(), False)
+
+        alignment = Alignment(read="AAA|AGG|T--", reference="_AA|AGG|T--")
+        cas9_region = Alignment(read="AAA|AGG|T", reference="_AA|AGG|T")
+        cluster = MutationCluster(alignment, cas9_region)
+        self.assertEqual(cluster.is_interesting(), True)
+
+        alignment = Alignment(read="--A|CCA|AA_", reference="--A|CCA|AAA")
+        cas9_region = Alignment(read="A|CCA|AA_", reference="A|CCA|AAA")
+        cluster = MutationCluster(alignment, cas9_region)
+        self.assertEqual(cluster.is_interesting(), True)
+
+        alignment = Alignment(read="--A|CCA|AAG", reference="--A|CCA|AAA")
+        cas9_region = Alignment(read="A|CCA|AAG", reference="A|CCA|AAA")
+        cluster = MutationCluster(alignment, cas9_region)
+        self.assertEqual(cluster.is_interesting(), True)
 
 class TestReadReferenceRelationship(unittest.TestCase):
 
@@ -319,14 +344,14 @@ class TestPresenter(unittest.TestCase):
         self.assertEqual(results[0].n20(), self.n20.upper())
         self.assertEqual(results[0].pam(), self.pam.upper())
         self.assertEqual(results[0].name(), "foo")
-        self.assertEqual(len(results[0].mutation_clusters), 3)
+        self.assertEqual(len(results[0].mutation_clusters), 1)
         self.assertEqual(results[0].total_reads(), 6)
 
         self.assertEqual(results[1].sequence(), self.sequence.upper())
         self.assertEqual(results[1].n20(), self.n20.upper())
         self.assertEqual(results[1].pam(), self.pam.upper())
         self.assertEqual(results[1].name(), "bar")
-        self.assertEqual(len(results[1].mutation_clusters), 3)
+        self.assertEqual(len(results[1].mutation_clusters), 1)
         self.assertEqual(results[1].total_reads(), 6)
 
     def test_cluster_results(self):
@@ -338,12 +363,8 @@ class TestPresenter(unittest.TestCase):
         mutation_clusters = results[0].mutation_clusters
 
         self.assertEqual(mutation_clusters[0].count(), 1)
-        self.assertEqual(mutation_clusters[1].count(), 1)
-        self.assertEqual(mutation_clusters[2].count(), 1)
 
-        expected = [('A___||_T', 'A___||_T', 'AAAT||TT'),
-                    ('|AAAAT||TGGGG', '---|AAAAT||TGGGG', '---|AAAAT||____T'),
-                    ('C|TTTAAATTTTAT||T', 'C|TTTAAATTTTAT||T', 'C|___AAA____AT||T')]
+        expected = [('A___||_T', 'A___||_T', 'AAAT||TT')]
 
         actual = []
         for cluster in mutation_clusters:

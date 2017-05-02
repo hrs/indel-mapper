@@ -9,6 +9,12 @@ class Alignment(object):
     def description(self):
         return SequenceDiff(self.reference, self.read).description()
 
+    def has_unmatched_bases_at(self, index):
+        return self.reference[index] != self.read[index]
+
+    def startswith(self, alignment):
+        return self.read.startswith(alignment.read)
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return (other.reference == self.reference and

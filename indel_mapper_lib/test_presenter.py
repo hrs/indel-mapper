@@ -38,31 +38,31 @@ class TestMutationCluster(unittest.TestCase):
         csv_row = cluster.csv_row()
         self.assertEqual(csv_row, [cas9_region.reference, cas9_region.read, "2 mutations (ca to gt)", 2])
 
-    def test_is_interesting(self):
+    def test_has_mutations_adjacent_to_cutsite(self):
         alignment = Alignment(read="-A|GGG_||AAA|AGG|T-", reference="-A|GGGG||AAA|AGG|T-")
         cas9_region = Alignment(read="A|GGG_||AAA|AGG|T", reference="A|GGGG||AAA|AGG|T")
         cluster = MutationCluster(alignment, cas9_region)
-        self.assertEqual(cluster.is_interesting(), True)
+        self.assertEqual(cluster.has_mutations_adjacent_to_cutsite(), True)
 
         alignment = Alignment(read="-A|GGGG||ATT|AGG|T-", reference="-A|GGGG||A_T|AGG|T-")
         cas9_region = Alignment(read="A|GGGG||ATT|AGG|T", reference="A|GGGG||A_T|AGG|T")
         cluster = MutationCluster(alignment, cas9_region)
-        self.assertEqual(cluster.is_interesting(), False)
+        self.assertEqual(cluster.has_mutations_adjacent_to_cutsite(), False)
 
         alignment = Alignment(read="AAA|AGG|T--", reference="_AA|AGG|T--")
         cas9_region = Alignment(read="AAA|AGG|T", reference="_AA|AGG|T")
         cluster = MutationCluster(alignment, cas9_region)
-        self.assertEqual(cluster.is_interesting(), True)
+        self.assertEqual(cluster.has_mutations_adjacent_to_cutsite(), True)
 
         alignment = Alignment(read="--A|CCA|AA_", reference="--A|CCA|AAA")
         cas9_region = Alignment(read="A|CCA|AA_", reference="A|CCA|AAA")
         cluster = MutationCluster(alignment, cas9_region)
-        self.assertEqual(cluster.is_interesting(), True)
+        self.assertEqual(cluster.has_mutations_adjacent_to_cutsite(), True)
 
         alignment = Alignment(read="--A|CCA|AAG", reference="--A|CCA|AAA")
         cas9_region = Alignment(read="A|CCA|AAG", reference="A|CCA|AAA")
         cluster = MutationCluster(alignment, cas9_region)
-        self.assertEqual(cluster.is_interesting(), True)
+        self.assertEqual(cluster.has_mutations_adjacent_to_cutsite(), True)
 
 class TestReadReferenceRelationship(unittest.TestCase):
 

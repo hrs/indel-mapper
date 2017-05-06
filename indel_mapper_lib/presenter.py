@@ -24,17 +24,20 @@ class MutationCluster(object):
     def has_mutations_adjacent_to_cutsite(self):
         if CUTSITE_REPRESENTATION in self.cas9_region.read:
             index_of_cutsite = self.cas9_region.read.index(CUTSITE_REPRESENTATION)
-            left_of_cutsite = index_of_cutsite - 1
-            right_of_cutsite = index_of_cutsite + 1
-            if left_of_cutsite >= 0 and self.cas9_region.has_unmatched_bases_at(left_of_cutsite):
-                return True
-            if right_of_cutsite < len(self.cas9_region.read) and self.cas9_region.has_unmatched_bases_at(right_of_cutsite):
-                return True
-            return False
-        elif self.alignments[0].startswith(self.cas9_region):
+            return self._has_unmatched_bases_left_of_cutsite(index_of_cutsite) or \
+                self._has_unmatched_bases_right_of_cutsite(index_of_cutsite)
+        elif self.alignments[0].starts_with(self.cas9_region):
             return self.cas9_region.has_unmatched_bases_at(0)
         else:
             return self.cas9_region.has_unmatched_bases_at(-1)
+
+    def _has_unmatched_bases_left_of_cutsite(self, cutsite):
+        index = cutsite - 1
+        return index >= 0 and self.cas9_region.has_unmatched_bases_at(index)
+
+    def _has_unmatched_bases_right_of_cutsite(self, cutsite):
+        index = cutsite + 1
+        return index < len(self.cas9_region.read) and self.cas9_region.has_unmatched_bases_at(index)
 
 class ReadReferenceRelationship(object):
     def __init__(self, aligned_pair_index, aligned_pairs, reference_sequence, read_sequence, pam_index, n20_index, is_ngg):
@@ -103,22 +106,7 @@ class ReadReferenceRelationship(object):
     def _is_mismatch(self, read_base, reference_base):
         return read_base != reference_base
 
-
-class DenotationIndex(object):
-    def __init__(self, index, cutsite=False, n20=False):
-        self.index = index
-        self.cutsite = cutsite
-        self.n20 = n20
-        self.representation = self._representation()
-
-    def _representation(self):
-        if self.cutsite:
-            return CUTSITE_REPRESENTATION
-        else:
-            return PAM_AND_N20_REPRESENTATION
-
-
-class Cas9Denotations(object):
+class Cas9IndicatorInserter(object):
     def __init__(self, cutsite_index, pam_index, n20_pam_index, n20_index, aligned_pairs, is_ngg):
         self.cutsite_index = cutsite_index
         self.pam_index = pam_index
@@ -126,21 +114,22 @@ class Cas9Denotations(object):
         self.n20_index = n20_index
         self.aligned_pairs = aligned_pairs
         self.is_ngg = is_ngg
-        self.denotation_indexes = self._get_denotation_indexes()
-        self.filtered_denotation_indexes = [index_object for index_object in self.denotation_indexes if index_object.index is not None]
+        self.cas9_indicators = self._cas9_indicators()
 
-    def _get_denotation_indexes(self):
-        denotation_indexes = []
+    def _cas9_indicators(self):
+        cas9_indicators = {}
         for aligned_pair_index, sequence_indexes in enumerate(self.aligned_pairs):
             _, reference_index = sequence_indexes
             if reference_index == self.cutsite_index:
-                denotation_indexes.append(DenotationIndex(aligned_pair_index, True))
-            elif reference_index == self.pam_index or reference_index == self.n20_pam_index:
-                denotation_indexes.append(DenotationIndex(aligned_pair_index))
+                cas9_indicators["cutsite"] = aligned_pair_index
+            elif reference_index == self.pam_index:
+                cas9_indicators["pam"] = aligned_pair_index
+            elif reference_index == self.n20_pam_index:
+                cas9_indicators["n20_pam"] = aligned_pair_index
             elif reference_index == self.n20_index:
-                denotation_indexes.append(DenotationIndex(aligned_pair_index, False, True))
+                cas9_indicators["n20"] = aligned_pair_index
 
-        return denotation_indexes
+        return cas9_indicators
 
     def _read_is_right_of_cutsite(self):
         return self._distance_of_right_read_to_cutsite() > 0
@@ -158,84 +147,70 @@ class Cas9Denotations(object):
             if reference_index is not None:
                 return self.cutsite_index - reference_index
 
-    def apply_to_presentation(self, reference_presentation_array, read_presentation_array):
+    def insert_indicators(self, reference_presentation_array, read_presentation_array):
         reference_presentation_string = ''
         read_presentation_string = ''
-        if len(self.filtered_denotation_indexes) > 0:
+        if len(self.cas9_indicators) > 0:
             for index, value in enumerate(reference_presentation_array):
-                if not self.is_ngg:
-                    for denotation in self.filtered_denotation_indexes:
-                        if denotation.n20 and not self._read_is_right_of_cutsite():
-                            continue
-                        if index == denotation.index:
-                            reference_presentation_string += denotation.representation
-                            read_presentation_string += denotation.representation
+                already_added = False
 
-                reference_presentation_string += value
-                read_presentation_string += read_presentation_array[index]
+                for cas9_mark, cas9_mark_index in self.cas9_indicators.items():
+                    if index == cas9_mark_index:
+                        if self._should_add_left_of_base(cas9_mark):
+                            reference_presentation_string += self._get_marking(cas9_mark) + value
+                            read_presentation_string += self._get_marking(cas9_mark) + read_presentation_array[index]
+                        else:
+                            reference_presentation_string += value + self._get_marking(cas9_mark)
+                            read_presentation_string += read_presentation_array[index] + self._get_marking(cas9_mark)
+                        already_added = True
 
-                if self.is_ngg:
-                    for denotation in self.filtered_denotation_indexes:
-                        if index == denotation.index:
-                            reference_presentation_string += denotation.representation
-                            read_presentation_string += denotation.representation
+                if not already_added:
+                    reference_presentation_string += value
+                    read_presentation_string += read_presentation_array[index]
 
-                if not self.is_ngg:
-                    for denotation in self.filtered_denotation_indexes:
-                        if denotation.n20 and index == denotation.index and not self._read_is_right_of_cutsite():
-                            reference_presentation_string += denotation.representation
-                            read_presentation_string += denotation.representation
         else:
             reference_presentation_string = ''.join(reference_presentation_array)
             read_presentation_string = ''.join(read_presentation_array)
 
-        if self._read_is_right_of_cutsite() and self.is_ngg:
-            padding = CUTSITE_REPRESENTATION + "?" * (self._distance_of_right_read_to_cutsite() - 1)
-            reference_presentation_string = padding + reference_presentation_string
-            read_presentation_string = padding + read_presentation_string
-        if self._read_is_right_of_cutsite() and not self.is_ngg:
-            padding = CUTSITE_REPRESENTATION + "?" * self._distance_of_right_read_to_cutsite()
-            reference_presentation_string = padding + reference_presentation_string
-            read_presentation_string = padding + read_presentation_string
-        elif self._read_is_left_of_cutsite() and self.is_ngg:
-            padding = "?" * self._distance_of_left_read_to_cutsite() + CUTSITE_REPRESENTATION
-            reference_presentation_string = reference_presentation_string + padding
-            read_presentation_string = read_presentation_string + padding
-        elif self._read_is_left_of_cutsite() and not self.is_ngg:
-            padding = "?" * (self._distance_of_left_read_to_cutsite() - 1) + CUTSITE_REPRESENTATION
-            reference_presentation_string = reference_presentation_string + padding
-            read_presentation_string = read_presentation_string + padding
+        return self._pad_strings_if_needed(reference_presentation_string, read_presentation_string)
 
+    def _pad_strings_if_needed(self, reference_presentation_string, read_presentation_string):
+        if self._read_is_right_of_cutsite():
+            padding = CUTSITE_REPRESENTATION + "?" * self._get_padding_length_for_right_read()
+            reference_presentation_string = padding + reference_presentation_string
+            read_presentation_string = padding + read_presentation_string
+        elif self._read_is_left_of_cutsite():
+            padding = "?" * self._get_padding_length_for_left_read() + CUTSITE_REPRESENTATION
+            reference_presentation_string = reference_presentation_string + padding
+            read_presentation_string = read_presentation_string + padding
         return reference_presentation_string, read_presentation_string
 
+    def _should_add_left_of_base(self, indicator):
+        return not self._should_add_right_of_base(indicator)
 
-class ReferencePresenter(object):
-    def __init__(self, reference):
-        self.reference = reference
-        self.mutation_clusters = self._sorted_clusters_with_mutations_near_cutsite(reference)
+    def _should_add_right_of_base(self, indicator):
+        return self.is_ngg or ((not self.is_ngg) and indicator == "n20" and not self._read_is_right_of_cutsite())
 
-    def name(self):
-        return self.reference.name
+    def _get_padding_length_for_right_read(self):
+        if self.is_ngg:
+            return self._distance_of_right_read_to_cutsite() - 1
+        else:
+            return self._distance_of_right_read_to_cutsite()
 
-    def sequence(self):
-        return self.reference.sequence
+    def _get_padding_length_for_left_read(self):
+        if self.is_ngg:
+            return self._distance_of_left_read_to_cutsite()
+        else:
+            return self._distance_of_left_read_to_cutsite() - 1
 
-    def n20(self):
-        return self.reference.n20
+    def _get_marking(self, cas9_mark):
+        if cas9_mark == "cutsite":
+            return CUTSITE_REPRESENTATION
+        else:
+            return PAM_AND_N20_REPRESENTATION
 
-    def pam(self):
-        return self.reference.pam
-
-    def has_mutation_clusters(self):
-        return len(self.mutation_clusters) != 0
-
-    def total_reads(self):
-        return len(self.reference.reads)
-
-    def csv_row_prefix_cells(self):
-        return [self.name(), self.total_reads()]
-
-    def _sorted_clusters_with_mutations_near_cutsite(self, reference):
+class ReferenceProcessor(object):
+    def compute_mutation_clusters(self, reference):
         all_clusters = self._cluster_reads_by_mutations_near_cutsite(reference).values()
         interesting_clusters = [cluster for cluster in all_clusters if cluster.has_mutations_adjacent_to_cutsite()]
         return sorted(interesting_clusters,
@@ -343,9 +318,36 @@ class ReferencePresenter(object):
         n20_pam_index = reference.n20_pam_index()
         n20_index = reference.n20_index()
 
-        denotations = Cas9Denotations(cutsite_index, pam_index, n20_pam_index, n20_index, read.aligned_pairs, reference.is_ngg())
+        inserter = Cas9IndicatorInserter(cutsite_index, pam_index, n20_pam_index, n20_index, read.aligned_pairs, reference.is_ngg())
 
-        return denotations.apply_to_presentation(reference_presentation, read_presentation)
+        return inserter.insert_indicators(reference_presentation, read_presentation)
+
+
+class ReferencePresenter(object):
+    def __init__(self, reference, mutation_clusters):
+        self.reference = reference
+        self.mutation_clusters = mutation_clusters
+
+    def name(self):
+        return self.reference.name
+
+    def sequence(self):
+        return self.reference.sequence
+
+    def n20(self):
+        return self.reference.n20
+
+    def pam(self):
+        return self.reference.pam
+
+    def has_mutation_clusters(self):
+        return len(self.mutation_clusters) != 0
+
+    def total_reads(self):
+        return len(self.reference.reads)
+
+    def csv_row_prefix_cells(self):
+        return [self.name(), self.total_reads()]
 
 
 class Presenter(object):
@@ -353,4 +355,10 @@ class Presenter(object):
         self.references = references
 
     def present(self):
-        return [ReferencePresenter(reference) for reference in self.references if reference.has_reads_with_indels_near_the_cutsite]
+        processor = ReferenceProcessor()
+        results = []
+        for reference in self.references:
+            if reference.has_reads_with_indels_near_the_cutsite:
+                mutation_clusters = processor.compute_mutation_clusters(reference)
+                results.append(ReferencePresenter(reference, mutation_clusters))
+        return results

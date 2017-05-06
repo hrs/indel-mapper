@@ -12,8 +12,8 @@ class Alignment(object):
     def has_unmatched_bases_at(self, index):
         return self.reference[index] != self.read[index]
 
-    def startswith(self, alignment):
-        return self.read.startswith(alignment.read)
+    def starts_with(self, alignment):
+        return self.read.startswith(alignment.read) and self.reference.startswith(alignment.reference)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):

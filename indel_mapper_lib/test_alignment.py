@@ -19,11 +19,11 @@ class TestAlignment(unittest.TestCase):
         self.assertFalse(test_alignment.has_unmatched_bases_at(1))
         self.assertTrue(test_alignment.has_unmatched_bases_at(-1))
 
-    def test_startswith(self):
+    def test_starts_with(self):
 
-        container_alignment = Alignment("gamma", "alphabeta")
-        alignment_a = Alignment("delta", "alpha")
+        container_alignment = Alignment("gammadelta", "alphabeta")
+        alignment_a = Alignment("gamma", "alpha")
         alignment_b = Alignment("omega", "beta")
 
-        self.assertTrue(container_alignment.startswith(alignment_a))
-        self.assertFalse(container_alignment.startswith(alignment_b))
+        self.assertTrue(container_alignment.starts_with(alignment_a))
+        self.assertFalse(container_alignment.starts_with(alignment_b))

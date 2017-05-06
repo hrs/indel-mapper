@@ -279,19 +279,140 @@ class TestReferencePresenter(unittest.TestCase):
 
     def test_reference_presenter(self):
         ref = ReferencePresenter(Reference("foo", "", "", "", []))
-        alignment = Alignment("CAG|A__________GG|TC--------",
-                              "CAT|AAAATCTTTGAGG|GC--------")
-        cas9_region = Alignment("CAG|A__________GG|TC",
-                                "CAT|AAAATCTTTGAGG|GC")
-
-        new_alignment, new_cas9_region = ref._realign(alignment, cas9_region)
-
-        self.assertEqual(new_alignment.read, alignment.read)
-        self.assertEqual(new_cas9_region.read, cas9_region.read)
-        self.assertEqual(new_alignment.reference, "CAG|__________AGG|TC--------")
 
         self.assertEqual(ref.csv_row_prefix_cells(), ["foo", 0])
 
+class TestCas9Denotations(unittest.TestCase):
+
+    def create_aligned_pairs(self, read_sequence, reference_positions):
+        return tuple(zip(range(len(read_sequence)), reference_positions))
+
+    def test_apply_to_presentation(self):
+        n20 = "ccccggggaaaa"
+        sequence = "ttttttttttttttccccggggaaaacggttt"
+        pam = "ngg"
+
+        reference_positions_a = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+        sequence_a = "ttccccgggg"
+        read_a = Read("foo", reference_positions_a, sequence_a, self.create_aligned_pairs(sequence_a, reference_positions_a))
+
+        reference_positions_b = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+        sequence_b = "ttccccggggaaaacggtt"
+        read_b = Read("bar", reference_positions_b, sequence_b, self.create_aligned_pairs(sequence_b, reference_positions_b))
+
+        reference_positions_c = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+        sequence_c = "ttccccgggga"
+        read_c = Read("baz", reference_positions_c, sequence_c, self.create_aligned_pairs(sequence_c, reference_positions_c))
+
+        reference_positions_d = [23, 24, 25, 26, 27]
+        sequence_d = "aaacg"
+        read_d = Read("bat", reference_positions_d, sequence_d, self.create_aligned_pairs(sequence_d, reference_positions_d))
+
+        reference =  Reference("test", n20, sequence, pam, [read_a, read_b, read_c, read_d])
+
+        denotations = Cas9Denotations(reference.cutsite_index(),
+                                      reference.pam_index(),
+                                      reference.n20_pam_index(),
+                                      reference.n20_index(),
+                                      read_a.aligned_pairs,
+                                      reference.is_ngg())
+
+        result_reference, result_read = denotations.apply_to_presentation(list(sequence_a), list(sequence_a))
+
+        self.assertEqual(result_reference, "tt|ccccgggg?||")
+        self.assertEqual(result_read, "tt|ccccgggg?||")
+
+        denotations = Cas9Denotations(reference.cutsite_index(),
+                                      reference.pam_index(),
+                                      reference.n20_pam_index(),
+                                      reference.n20_index(),
+                                      read_b.aligned_pairs,
+                                      reference.is_ngg())
+
+        result_reference, result_read = denotations.apply_to_presentation(list(sequence_b), list(sequence_b))
+
+        self.assertEqual(result_reference, "tt|ccccgggga||aaa|cgg|tt")
+        self.assertEqual(result_read, "tt|ccccgggga||aaa|cgg|tt")
+
+        denotations = Cas9Denotations(reference.cutsite_index(),
+                                      reference.pam_index(),
+                                      reference.n20_pam_index(),
+                                      reference.n20_index(),
+                                      read_c.aligned_pairs,
+                                      reference.is_ngg())
+
+        result_reference, result_read = denotations.apply_to_presentation(list(sequence_c), list(sequence_c))
+
+        self.assertEqual(result_reference, "tt|ccccgggga||")
+        self.assertEqual(result_read, "tt|ccccgggga||")
+
+        denotations = Cas9Denotations(reference.cutsite_index(),
+                                      reference.pam_index(),
+                                      reference.n20_pam_index(),
+                                      reference.n20_index(),
+                                      read_d.aligned_pairs,
+                                      reference.is_ngg())
+
+        result_reference, result_read = denotations.apply_to_presentation(list(sequence_d), list(sequence_d))
+
+        self.assertEqual(result_reference, "||aaa|cg")
+        self.assertEqual(result_read, "||aaa|cg")
+
+
+    def test_to_presentation_for_ccn(self):
+        n20 = "ccccggggaaaa"
+        sequence = "aaacctccccggggaaaattt"
+        pam = "ccn"
+
+        reference_positions_a = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19]
+        sequence_a = "acctccccggggaaaat"
+        read_a = Read("foo", reference_positions_a, sequence_a, self.create_aligned_pairs(sequence_a, reference_positions_a))
+
+        reference_positions_b = [0, 1, 2, 3, 4, 5]
+        sequence_b = "aaacct"
+        read_b = Read("bar", reference_positions_b, sequence_b, self.create_aligned_pairs(sequence_b, reference_positions_b))
+
+        reference_positions_c = [10, 11, 12, 13, 14, 15, 16, 17, 18]
+        sequence_c = "ggggaaaat"
+        read_c = Read("baz", reference_positions_c, sequence_c, self.create_aligned_pairs(sequence_c, reference_positions_c))
+
+        reference =  Reference("test", n20, sequence, pam, [read_a, read_b])
+
+        denotations = Cas9Denotations(reference.cutsite_index(),
+                                      reference.pam_index(),
+                                      reference.n20_pam_index(),
+                                      reference.n20_index(),
+                                      read_a.aligned_pairs,
+                                      reference.is_ngg())
+
+        result_reference, result_read = denotations.apply_to_presentation(list(sequence_a), list(sequence_a))
+
+        self.assertEqual(result_reference, "a|cct|ccc||cggggaaaa|t")
+        self.assertEqual(result_read, "a|cct|ccc||cggggaaaa|t")
+
+        denotations = Cas9Denotations(reference.cutsite_index(),
+                                      reference.pam_index(),
+                                      reference.n20_pam_index(),
+                                      reference.n20_index(),
+                                      read_b.aligned_pairs,
+                                      reference.is_ngg())
+
+        result_reference, result_read = denotations.apply_to_presentation(list(sequence_b), list(sequence_b))
+
+        self.assertEqual(result_reference, "aaa|cct???||")
+        self.assertEqual(result_read, "aaa|cct???||")
+
+        denotations = Cas9Denotations(reference.cutsite_index(),
+                                      reference.pam_index(),
+                                      reference.n20_pam_index(),
+                                      reference.n20_index(),
+                                      read_c.aligned_pairs,
+                                      reference.is_ngg())
+
+        result_reference, result_read = denotations.apply_to_presentation(list(sequence_c), list(sequence_c))
+
+        self.assertEqual(result_reference, "||?ggggaaaa|t")
+        self.assertEqual(result_read, "||?ggggaaaa|t")
 
 class TestPresenter(unittest.TestCase):
 
@@ -300,7 +421,7 @@ class TestPresenter(unittest.TestCase):
 
     def create_test_reference(self, name):
         self.n20 = "aaaatttc"
-        self.sequence = "tactactacaaaatttcnggt"
+        self.sequence = "tactactacaaaatttccggt"
         self.pam = "ngg"
 
         reference_positions_a = [8, None, None, None, 9, 10, 11, None, None, None, None, 12, 13, 14]

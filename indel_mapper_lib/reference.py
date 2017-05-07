@@ -3,7 +3,7 @@ from .sequence import Sequence
 
 class Reference(object):
 
-    def __init__(self, name, n20, sequence, pam, reads, max_dist_to_cutsite=3):
+    def __init__(self, name, n20, sequence, pam, reads, max_dist_to_cutsite=20):
         self.name = name
         self.n20 = n20.upper()
         self.sequence = sequence.upper()
@@ -91,11 +91,11 @@ class Reference(object):
     def _min_abs_indel_dist(self, read):
         return min([abs(self.distance_to_cutsite(i)) for i in read.valid_indels])
 
-    def _compute_reads_with_indels_near_the_cutsite(self, padding):
+    def _compute_reads_with_indels_near_the_cutsite(self, max_dist_to_cutsite):
         # returns the reads with indels near the cutsite
         reads_with_indels = [read for read in self.reads if len(read.valid_indels) > 0]
         if len(reads_with_indels) > 0:
-            return [read for read in reads_with_indels if self._min_abs_indel_dist(read) <= padding]
+            return [read for read in reads_with_indels if self._min_abs_indel_dist(read) <= max_dist_to_cutsite]
         else:
             return []
 

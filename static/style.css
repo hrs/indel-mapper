@@ -1,13 +1,57 @@
 .sequence {
-	font-family: Courier;
+    font-family: Courier;
 }
 
 .tiny-text {
-	font-size: 10px;
+    font-size: 10px;
 }
 
-footer {
-	position: absolute;
-	bottom: 0px;
-	padding-bottom: 10px;
+body {
+    font-family: "Helvetica Neue", "Helvetica", "Roboto", "Arial", sans-serif;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+}
+
+input[type=submit] {
+    border-radius: 3px;
+    border: medium none;
+    background-color: #477dca;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 10px 20px;
+}
+
+input[type=submit]:hover {
+    background-color: #3964a2;
+}
+
+#title {
+    color: #477dca;
+}
+
+hr {
+    border-top: none;
+    margin: 1.5em 0;
+    border-bottom: 1px solid #ddd;
+}
+
+li {
+    background-color: #fbe3e4;
+    color: #97161b;
+    padding: 0.75em;
+    text-align: center;
+    display: block;
+    font-weight: 600;
+    margin-left: -40px;
+}
+
+.result {
+    background-color: #dddddd;
+    padding: 1%;
+    margin-top: 1%;
+    width: 98%;
 }

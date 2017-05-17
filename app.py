@@ -2,7 +2,11 @@ from flask import Flask, render_template, request, flash
 from indel_mapper_lib.sam_parser import SamParser
 from indel_mapper_lib.reference_parser import ReferenceParser
 from indel_mapper_lib.presenter import Presenter
+from indel_mapper_lib.csv_writer import CsvWriter
+from indel_mapper_lib.csv_upload import CsvUpload
+from indel_mapper_lib.csv_upload import NullCsvUpload
 from io import StringIO
+import binascii
 import csv
 import os
 import pysam
@@ -30,17 +34,21 @@ def index():
         else:
             try:
                 results = _compute_indels_near_cutsite(alignment_file, reference_file)
-                return render_template("index.html", results=results)
+                upload = _upload(results)
+
+                return render_template("index.html",
+                                       results=results,
+                                       upload=upload)
             except Exception as e:
                 flash("Error processing.")
-                return render_template("index.html", results=[])
-    return render_template("index.html", results=[])
+                return render_template("index.html", results=[], upload=NullCsvUpload())
+    return render_template("index.html", results=[], upload=NullCsvUpload())
 
 # HTTP Error 413 Request Entity Too Large
 @app.errorhandler(413)
 def request_entity_too_large(error):
     flash("Uploaded file is too large.")
-    return render_template("index.html", results=[]), 413
+    return render_template("index.html", results=[], upload=NullCsvUpload()), 413
 
 # This is a first pass naive file detection.
 def _is_extension(filestorage, extension):
@@ -55,6 +63,17 @@ def _compute_indels_near_cutsite(sam_file, csv_file):
     presenter_results = Presenter([reference for reference in references if reference.is_valid])
 
     return presenter_results.present()
+
+def _upload(results):
+    # Write a temporary CSV file with an unlikely-to-collide name.
+    random_string = binascii.hexlify(os.urandom(16))
+    csv_temp_filename = "/tmp/{}.csv".format(random_string)
+    CsvWriter(results).write_to(csv_temp_filename)
+
+    # Upload it to S3.
+    upload = CsvUpload(open(csv_temp_filename, "rb"))
+    os.remove(csv_temp_filename)
+    return upload
 
 
 if __name__ == "__main__":

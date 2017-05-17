@@ -61,6 +61,10 @@
 
       <hr></hr>
 
+      {% if upload.succeeded %}
+        <p>[<a href="{{ upload.url }}">Download a CSV</a>]</p>
+      {% endif %}
+
       {% for reference_presenter in results %}
       <div class="result">
         <h2>{{ reference_presenter.name() }}</h2>

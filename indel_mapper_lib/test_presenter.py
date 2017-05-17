@@ -4,7 +4,6 @@ from .alignment import Alignment
 from .reference import Reference
 from .presenter import Presenter
 from .presenter import ReferencePresenter
-from .presenter import ReferenceProcessor
 
 class TestReferencePresenter(unittest.TestCase):
 

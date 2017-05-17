@@ -120,6 +120,17 @@ class TestReference(unittest.TestCase):
         self.assertEqual(ngg_reference.distance_to_cutsite(indel_c), 0)
         self.assertEqual(ngg_reference.distance_to_cutsite(indel_d), 5)
 
+    def test_additional_cutsite(self):
+        n20 = "ccccggggaaaa"
+        sequence = "aaacctccccggggaaaattt"
+        pam = "ccn"
+
+        ccn_reference = Reference("", n20, sequence, pam, [])
+
+        self.assertEqual(ccn_reference.n20_pam_index(), 6)
+        self.assertEqual(ccn_reference.cutsite_index(), 9)
+
+
     def test_reads_with_indels_near_the_cutsite(self):
         n20 = "aaaatttc"
         sequence = "tactactacaaaatttcnggt"

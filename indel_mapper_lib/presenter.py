@@ -128,7 +128,6 @@ class Cas9IndicatorInserter(object):
                 cas9_indicators["n20_pam"] = aligned_pair_index
             elif reference_index == self.n20_index:
                 cas9_indicators["n20"] = aligned_pair_index
-
         return cas9_indicators
 
     def _read_is_right_of_cutsite(self):
@@ -156,12 +155,12 @@ class Cas9IndicatorInserter(object):
 
                 for cas9_mark, cas9_mark_index in self.cas9_indicators.items():
                     if index == cas9_mark_index:
-                        if self._should_add_left_of_base(cas9_mark):
-                            reference_presentation_string += self._get_marking(cas9_mark) + value
-                            read_presentation_string += self._get_marking(cas9_mark) + read_presentation_array[index]
-                        else:
+                        if self.is_ngg:
                             reference_presentation_string += value + self._get_marking(cas9_mark)
                             read_presentation_string += read_presentation_array[index] + self._get_marking(cas9_mark)
+                        else:
+                            reference_presentation_string += self._get_marking(cas9_mark) + value
+                            read_presentation_string += self._get_marking(cas9_mark) + read_presentation_array[index]
                         already_added = True
 
                 if not already_added:
@@ -184,12 +183,6 @@ class Cas9IndicatorInserter(object):
             reference_presentation_string = reference_presentation_string + padding
             read_presentation_string = read_presentation_string + padding
         return reference_presentation_string, read_presentation_string
-
-    def _should_add_left_of_base(self, indicator):
-        return not self._should_add_right_of_base(indicator)
-
-    def _should_add_right_of_base(self, indicator):
-        return self.is_ngg or ((not self.is_ngg) and indicator == "n20" and not self._read_is_right_of_cutsite())
 
     def _get_padding_length_for_right_read(self):
         if self.is_ngg:

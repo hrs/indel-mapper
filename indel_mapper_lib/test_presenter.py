@@ -343,13 +343,48 @@ class TestCas9IndicatorInserter(unittest.TestCase):
         self.assertEqual(result_reference, "||aaa|cg")
         self.assertEqual(result_read, "||aaa|cg")
 
+    def test_apply_to_presentation_long_case(self):
+        sequence = "GGATTCAGCACCCAGAATGAGGTGGTCTCTGAACGCCCCTCCTCCTTTACAGGCGAGGAAACAGCCCTGTGGGAAGTCGAGGTTCCAAGGTCACAGTGAGGGGGCCCTGGCCACCCGATTCAGCGCAGGAAATAGTGAGAAAGTCGTTTTTAGCCGACTCTGACCCGCATTCGGTTTCCAGTGCTGTCTTAGGAGGGCCGTGTGTTGAGGGTGGGCAAACGTGGTTTGGAGAGCG"
+        n20 = "CCCGATTCAGCGCAGGAAAT"
+        pam = "CCN"
+
+        query_sequence = "TACCTTGGATTCAGCACCCAGAATGAGGTGGTCTCTGAACGCCCCTCCTCCTTTACAGGCGAGGAAACAGCCCTGTGGGAAGTCGAGGCTCCAAGGTCACAGTGAGGGGCCCTGGCCACCCGGATTCAGCGCAGGAAATAGTGAGAAAGTC"
+
+        aligned_pairs = ((0, 1), (1, 2), (2, 3), (3, 4), (4, None), (5, None), (6, None), (7, None), (8, None), (9, None), (10, None), (11, 5), (12, 6), (13, 7), (14, 8), (15, 9), (16, 10), (17, 11), (18, 12), (19, 13), (20, 14), (21, 15), (22, 16), (23, 17), (24, 18), (25, 19), (26, 20), (27, 21), (28, 22), (29, 23), (30, 24), (31, 25), (32, 26), (33, 27), (34, 28), (35, 29), (36, 30), (37, 31), (38, 32), (39, 33), (40, 34), (41, 35), (42, 36), (43, 37), (44, 38), (45, 39), (46, 40), (47, 41), (48, 42), (49, 43), (50, 44), (51, 45), (52, 46), (53, 47), (54, 48), (55, 49), (56, 50), (57, 51), (58, 52), (59, 53), (60, 54), (61, 55), (62, 56), (63, 57), (64, 58), (65, 59), (66, 60), (67, 61), (68, 62), (69, 63), (70, 64), (71, 65), (72, 66), (73, 67), (74, 68), (75, 69), (76, 70), (77, 71), (78, 72), (79, 73), (80, 74), (81, 75), (82, 76), (83, 77), (84, 78), (85, 79), (86, 80), (87, 81), (88, 82), (89, 83), (90, 84), (91, 85), (92, 86), (93, 87), (94, 88), (95, 89), (96, 90), (97, 91), (98, 92), (99, 93), (100, 94), (101, 95), (102, 96), (103, 97), (104, 98), (None, 99), (105, 100), (106, 101), (107, 102), (108, 103), (109, 104), (110, 105), (111, 106), (112, 107), (113, 108), (114, 109), (115, 110), (116, 111), (117, 112), (118, 113), (119, 114), (120, 115), (121, None), (122, 116), (123, 117), (124, 118), (125, 119), (126, 120), (127, 121), (128, 122), (129, 123), (130, 124), (131, 125), (132, 126), (133, 127), (134, 128), (135, 129), (136, 130), (137, 131), (138, 132), (139, 133), (140, 134), (141, 135), (142, 136), (143, 137), (144, 138), (145, 139), (146, 140), (147, 141), (148, 142), (149, 143), (150, 144))
+
+        reference_positions = [1, 2, 3, 4, None, None, None, None, None, None, None, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, None, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144]
+
+        read = Read("foo", reference_positions, query_sequence, aligned_pairs)
+
+        reference = Reference("test", n20, sequence, pam, [read])
+
+        inserter = Cas9IndicatorInserter(reference.cutsite_index(),
+                                      reference.pam_index(),
+                                      reference.n20_pam_index(),
+                                      reference.n20_index(),
+                                      read.aligned_pairs,
+                                      reference.is_ngg())
+
+        processed_query_sequence = "TACCTTGGATTC---------------------------------------------------------------------------GCT--------------A_G---------CCACCCGGATTCAGCGCAGGAAAT------------"
+
+        result_reference, result_read = inserter.insert_indicators(list(processed_query_sequence), list(processed_query_sequence))
+
+        self.assertEqual(result_read, "TACCTTGGATTC---------------------------------------------------------------------------GCT--------------A_G---------|CCA|CCCG||GATTCAGCGCAGGAAAT|------------")
+
+        p = Presenter([reference])
+        results = p.present()
+        mutation_clusters = results[0].mutation_clusters
+
+        self.assertEqual(len(aligned_pairs) + 5, len(mutation_clusters[0].alignments[0].reference))
+
+        self.assertTrue(mutation_clusters[0].cas9_region, "|CCA|CCCG||GATTCAGCGCAGGAAAT|")
 
     def test_apply_to_presentation_for_ccn(self):
         n20 = "ccccggggaaaa"
         sequence = "aaacctccccggggaaaattt"
         pam = "ccn"
 
-        reference_positions_a = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19]
+        reference_positions_a = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
         sequence_a = "acctccccggggaaaat"
         read_a = Read("foo", reference_positions_a, sequence_a, self.create_aligned_pairs(sequence_a, reference_positions_a))
 
@@ -361,7 +396,7 @@ class TestCas9IndicatorInserter(unittest.TestCase):
         sequence_c = "ggggaaaat"
         read_c = Read("baz", reference_positions_c, sequence_c, self.create_aligned_pairs(sequence_c, reference_positions_c))
 
-        reference =  Reference("test", n20, sequence, pam, [read_a, read_b])
+        reference =  Reference("test", n20, sequence, pam, [read_a, read_b, read_c])
 
         inserter = Cas9IndicatorInserter(reference.cutsite_index(),
                                       reference.pam_index(),

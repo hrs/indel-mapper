@@ -60,6 +60,12 @@ class ReferenceProcessor(object):
         """Alignment, Alignment -> Alignment"""
         return Realigner(cas9_region).align()
 
+    def _pam_and_n20_indexes(self, is_ngg, n20_index, pam_index):
+        if not is_ngg:
+            return min((n20_index, pam_index)), max((n20_index, pam_index))
+        else:
+            return min((n20_index+1, pam_index+1)), max((n20_index+1, pam_index+1))
+
     def get_sequence_representation(self, reference, read):
         """Reference, Read -> [Char], [Char]"""
         aligned_pairs = read.aligned_pairs
@@ -71,6 +77,10 @@ class ReferenceProcessor(object):
 
         indel_marker = "_"
 
+        pam_and_n20_min_index, pam_and_n20_max_index = self._pam_and_n20_indexes(reference.is_ngg(),
+                                                                                 reference.n20_index,
+                                                                                 reference.pam_index)
+
         for aligned_pair_index, sequence_indexes in enumerate(aligned_pairs):
             read_index, reference_index = sequence_indexes
 
@@ -78,9 +88,8 @@ class ReferenceProcessor(object):
                                                      aligned_pairs,
                                                      reference_sequence,
                                                      read_sequence,
-                                                     reference.pam_index,
-                                                     reference.n20_index,
-                                                     reference.is_ngg())
+                                                     pam_and_n20_min_index,
+                                                     pam_and_n20_max_index)
 
             previousIsMismatch = False
 

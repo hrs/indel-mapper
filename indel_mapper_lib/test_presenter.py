@@ -3,14 +3,6 @@ from .read import Read
 from .alignment import Alignment
 from .reference import Reference
 from .presenter import Presenter
-from .presenter import ReferencePresenter
-
-class TestReferencePresenter(unittest.TestCase):
-
-    def test_reference_presenter(self):
-        ref = ReferencePresenter(Reference("foo", "", "", "", []), [])
-
-        self.assertEqual(ref.csv_row_prefix_cells(), ["foo", 0])
 
 class TestPresenter(unittest.TestCase):
 

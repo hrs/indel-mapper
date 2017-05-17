@@ -1,6 +1,6 @@
+import boto3
 import datetime
 import os
-import tinys3
 
 
 class CsvUpload(object):
@@ -12,20 +12,34 @@ class CsvUpload(object):
         self._try_uploading(file)
 
     def _try_uploading(self, file):
-        file_name = self._csv_file_name()
+        filename = self._csv_filename()
         try:
-            conn = tinys3.Connection(self.S3_ACCESS_KEY, self.S3_SECRET_KEY, tls=True)
-            conn.upload(file_name, file, self.BUCKET_NAME)
+            self._upload(file, filename)
+            self._make_public(filename)
+
             self.succeeded = True
-            self.url = self._url_for(file_name)
-        except:
+            self.url = self._url_for(filename)
+        except Exception as e:
+            print(e)
             self.succeeded = False
             self.url = None
 
-    def _url_for(self, file_name):
-        return "https://{}.s3.amazonaws.com/{}".format(self.BUCKET_NAME, file_name)
+    def _s3(self):
+        return boto3.resource("s3",
+                              aws_access_key_id=self.S3_ACCESS_KEY,
+                              aws_secret_access_key=self.S3_SECRET_KEY)
 
-    def _csv_file_name(self):
+    def _upload(self, file, filename):
+        self._s3().Bucket(self.BUCKET_NAME).upload_fileobj(file, filename)
+
+    def _make_public(self, filename):
+        object_acl = self._s3().ObjectAcl(self.BUCKET_NAME, filename)
+        object_acl.put(ACL="public-read")
+
+    def _url_for(self, filename):
+        return "https://{}.s3.amazonaws.com/{}".format(self.BUCKET_NAME, filename)
+
+    def _csv_filename(self):
         now = datetime.datetime.now()
         return now.strftime("results-%Y-%m-%d-%H-%M-%S-%f.csv")
 

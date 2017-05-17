@@ -82,17 +82,6 @@ class ReferenceProcessor(object):
                                                      reference.n20_index,
                                                      reference.is_ngg())
 
-        for aligned_pair_index, sequence_indexes in enumerate(aligned_pairs):
-            read_index, reference_index = sequence_indexes
-
-            relationship = ReadReferenceRelationship(aligned_pair_index,
-                                                     aligned_pairs,
-                                                     reference_sequence,
-                                                     read_sequence,
-                                                     reference.pam_index,
-                                                     reference.n20_index,
-                                                     reference.is_ngg())
-
             previousIsMismatch = False
 
             if relationship.is_insertion():

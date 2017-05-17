@@ -12,20 +12,20 @@ class ReadReferenceRelationship(object):
         self.is_ngg = is_ngg
 
     def is_insertion(self):
-        return self._is_insertion(self.sequence_indexes)
+        return self.reference_index is None
 
     def is_deletion(self):
-        return self._is_deletion(self.sequence_indexes)
+        return self.read_index is None
 
     def _is_indel(self):
         return self.is_insertion() or self.is_deletion()
 
     def is_mismatch(self):
-        if not self._is_indel():
-            read_base = self.read_sequence[self.read_index]
-            reference_base = self.reference_sequence[self.reference_index]
-            return self._is_mismatch(read_base, reference_base)
-        return True
+        if self._is_indel():
+            return True
+        read_base = self.read_sequence[self.read_index]
+        reference_base = self.reference_sequence[self.reference_index]
+        return self._is_mismatch(read_base, reference_base)
 
     def is_between_pam_and_n20(self):
         if not self.is_ngg:

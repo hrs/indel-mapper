@@ -110,7 +110,7 @@ class ReferenceProcessor(object):
                     reference_presentation[aligned_pair_index] = reference_base
                     read_presentation[aligned_pair_index] = read_base
                     previousIsMismatch = False
-                elif relationship.is_mismatch():
+                elif relationship.is_mismatch_but_not_indel():
                     reference_presentation[aligned_pair_index] = reference_base
                     read_presentation[aligned_pair_index] = read_base
                     previousIsMismatch = True

@@ -49,21 +49,15 @@ class TestReadReferenceRelationship(unittest.TestCase):
         relationship = self.create_relationship(aligned_pair_index=106)
         self.assertTrue(relationship.is_deletion())
 
-    def test_is_mismatch(self):
+    def test_is_mismatch_but_not_indel(self):
         relationship = self.create_relationship(aligned_pair_index=20)
-        self.assertFalse(relationship.is_mismatch())
-
-        relationship = self.create_relationship(aligned_pair_index=3)
-        self.assertTrue(relationship.is_mismatch())
-
-        relationship = self.create_relationship(aligned_pair_index=106)
-        self.assertTrue(relationship.is_mismatch())
+        self.assertFalse(relationship.is_mismatch_but_not_indel())
 
         relationship = self.create_relationship(aligned_pair_index=0)
-        self.assertTrue(relationship.is_mismatch())
+        self.assertTrue(relationship.is_mismatch_but_not_indel())
 
         relationship = self.create_relationship(aligned_pair_index=1)
-        self.assertTrue(relationship.is_mismatch())
+        self.assertTrue(relationship.is_mismatch_but_not_indel())
 
     def test_is_between_pam_and_n20_for_ccn(self):
 

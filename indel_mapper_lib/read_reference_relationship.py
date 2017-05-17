@@ -20,9 +20,8 @@ class ReadReferenceRelationship(object):
     def _is_indel(self):
         return self.is_insertion() or self.is_deletion()
 
-    def is_mismatch(self):
-        if self._is_indel():
-            return True
+    def is_mismatch_but_not_indel(self):
+        # this will error if it's an indel
         read_base = self.read_sequence[self.read_index]
         reference_base = self.reference_sequence[self.reference_index]
         return self._is_mismatch(read_base, reference_base)

@@ -90,18 +90,18 @@ class TestReadReferenceRelationship(unittest.TestCase):
         relationship = self.create_relationship(aligned_pair_index=111)
         self.assertFalse(relationship.is_between_pam_and_n20())
 
-    def test_next_to_mismatch_or_indel(self):
+    def test_next_is_mismatch_or_indel(self):
         relationship = self.create_relationship(aligned_pair_index=100)
-        self.assertFalse(relationship.next_to_mismatch_or_indel())
+        self.assertFalse(relationship.next_is_mismatch_or_indel())
 
         relationship = self.create_relationship(aligned_pair_index=105)
-        self.assertTrue(relationship.next_to_mismatch_or_indel())
+        self.assertTrue(relationship.next_is_mismatch_or_indel())
 
         relationship = self.create_relationship(aligned_pair_index=106)
-        self.assertFalse(relationship.next_to_mismatch_or_indel())
+        self.assertFalse(relationship.next_is_mismatch_or_indel())
 
         relationship = self.create_relationship(aligned_pair_index=107)
-        self.assertTrue(relationship.next_to_mismatch_or_indel())
+        self.assertFalse(relationship.next_is_mismatch_or_indel())
 
         relationship = self.create_relationship(aligned_pair_index=5)
-        self.assertTrue(relationship.next_to_mismatch_or_indel())
+        self.assertFalse(relationship.next_is_mismatch_or_indel())

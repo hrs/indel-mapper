@@ -35,19 +35,7 @@ class ReadReferenceRelationship(object):
             return self.reference_index >= min([self.n20_index+1, self.pam_index+1]) and \
                 self.reference_index < max([self.n20_index+1, self.pam_index+1])
 
-    def next_to_mismatch_or_indel(self):
-        return self._previous_is_indel_or_mismatch() or self._next_is_indel_or_mismatch()
-
-    def _previous_is_indel_or_mismatch(self):
-        prev_index = self.aligned_pair_index - 1
-        if prev_index >= 0:
-            prev_aligned_pair = self.aligned_pairs[prev_index]
-            return self._is_insertion(prev_aligned_pair) or \
-                self._is_deletion(prev_aligned_pair) or \
-                self._is_mismatch(self.read_sequence[prev_aligned_pair[0]], self.reference_sequence[prev_aligned_pair[1]])
-        return False
-
-    def _next_is_indel_or_mismatch(self):
+    def next_is_mismatch_or_indel(self):
         next_index = self.aligned_pair_index + 1
         if next_index < len(self.aligned_pairs):
             next_aligned_pair = self.aligned_pairs[next_index]

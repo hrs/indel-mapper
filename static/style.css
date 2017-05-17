@@ -2,6 +2,12 @@
     font-family: Courier;
 }
 
+.region-container {
+    width: 99%;
+    white-space: nowrap;
+    overflow: auto;
+}
+
 .tiny-text {
     font-size: 10px;
 }

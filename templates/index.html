@@ -78,12 +78,14 @@
             </span>
           </h3>
           <div class="region-results">
+            <div class="region-container">
             {% for alignment in cluster.alignments %}
             <div class="sequence tiny-text">
                <p>Ref : {{ alignment.reference }}</p>
                <p>Read: {{ alignment.read }}</p>
             </div>
             {% endfor %}
+            </div>
           </div>
           {% endfor %}
         </div>

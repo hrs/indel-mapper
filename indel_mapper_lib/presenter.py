@@ -1,43 +1,10 @@
 import re
 from .alignment import Alignment
 from .realigner import Realigner
-from .sequence_diff import SequenceDiff
+from .mutation_cluster import MutationCluster
 
 CUTSITE_REPRESENTATION = "||" # string representation of where the cutsite is
 PAM_AND_N20_REPRESENTATION = "|" # string representation of the boundaries of the pam and n20
-
-class MutationCluster(object):
-    def __init__(self, marked_alignment, marked_cas9_region):
-        self.cas9_region = marked_cas9_region
-        self.alignments = [marked_alignment]
-        self.description = SequenceDiff(marked_cas9_region.reference, marked_cas9_region.read).description()
-
-    def add_read(self, representation):
-        self.alignments.append(representation)
-
-    def count(self):
-        return len(self.alignments)
-
-    def csv_row(self):
-        return [self.cas9_region.reference, self.cas9_region.read, self.description, self.count()]
-
-    def has_mutations_adjacent_to_cutsite(self):
-        if CUTSITE_REPRESENTATION in self.cas9_region.read:
-            index_of_cutsite = self.cas9_region.read.index(CUTSITE_REPRESENTATION)
-            return self._has_unmatched_bases_left_of_cutsite(index_of_cutsite) or \
-                self._has_unmatched_bases_right_of_cutsite(index_of_cutsite)
-        elif self.alignments[0].starts_with(self.cas9_region):
-            return self.cas9_region.has_unmatched_bases_at(0)
-        else:
-            return self.cas9_region.has_unmatched_bases_at(-1)
-
-    def _has_unmatched_bases_left_of_cutsite(self, cutsite):
-        index = cutsite - 1
-        return index >= 0 and self.cas9_region.has_unmatched_bases_at(index)
-
-    def _has_unmatched_bases_right_of_cutsite(self, cutsite):
-        index = cutsite + 1
-        return index < len(self.cas9_region.read) and self.cas9_region.has_unmatched_bases_at(index)
 
 class ReadReferenceRelationship(object):
     def __init__(self, aligned_pair_index, aligned_pairs, reference_sequence, read_sequence, pam_index, n20_index, is_ngg):

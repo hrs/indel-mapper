@@ -66,13 +66,10 @@ class ReferenceProcessor(object):
         reference_sequence = reference.sequence
         read_sequence = read.query_sequence
 
-        reference_presentation = []
-        read_presentation = []
+        reference_presentation = ['-'] * len(aligned_pairs)
+        read_presentation = ['-'] * len(aligned_pairs)
 
-        match_marker = "-"
         indel_marker = "_"
-
-        cutsite_region_presentation = ''
 
         for aligned_pair_index, sequence_indexes in enumerate(aligned_pairs):
             read_index, reference_index = sequence_indexes
@@ -99,31 +96,29 @@ class ReferenceProcessor(object):
             previousIsMismatch = False
 
             if relationship.is_insertion():
-                reference_presentation.append(indel_marker)
-                read_presentation.append(read_sequence[read_index])
+                reference_presentation[aligned_pair_index] = indel_marker
+                read_presentation[aligned_pair_index] = read_sequence[read_index]
                 previousIsMismatch = True
             elif relationship.is_deletion():
-                reference_presentation.append(reference_sequence[reference_index])
-                read_presentation.append(indel_marker)
+                reference_presentation[aligned_pair_index] = reference_sequence[reference_index]
+                read_presentation[aligned_pair_index] = indel_marker
                 previousIsMismatch = True
             else:
                 read_base = read_sequence[read_index]
                 reference_base = reference_sequence[reference_index]
                 if relationship.is_between_pam_and_n20():
-                    reference_presentation.append(reference_base)
-                    read_presentation.append(read_base)
+                    reference_presentation[aligned_pair_index] = reference_base
+                    read_presentation[aligned_pair_index] = read_base
                     previousIsMismatch = False
                 elif relationship.is_mismatch():
-                    reference_presentation.append(reference_base)
-                    read_presentation.append(read_base)
+                    reference_presentation[aligned_pair_index] = reference_base
+                    read_presentation[aligned_pair_index] = read_base
                     previousIsMismatch = True
                 elif previousIsMismatch or relationship.next_is_mismatch_or_indel():
-                    reference_presentation.append(reference_base)
-                    read_presentation.append(read_base)
+                    reference_presentation[aligned_pair_index] = reference_base
+                    read_presentation[aligned_pair_index] = read_base
                     previousIsMismatch = False
                 else:
-                    reference_presentation.append(match_marker)
-                    read_presentation.append(match_marker)
                     previousIsMismatch = False
 
         return reference_presentation, read_presentation

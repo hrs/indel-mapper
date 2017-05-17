@@ -15,6 +15,10 @@ class Reference(object):
         # save computation
         self.is_valid = self._compute_is_valid()
         if self.is_valid:
+            self.n20_pam_index = self._n20_pam_index()
+            self.cutsite_index = self._cutsite_index()
+            self.pam_index = self._pam_index()
+            self.n20_index = self._n20_index()
             self.reads_with_indels_near_the_cutsite = self._compute_reads_with_indels_near_the_cutsite(max_dist_to_cutsite)
 
     def is_ngg(self):
@@ -44,7 +48,7 @@ class Reference(object):
         high_index = low_index + len(n20_sequence) - 1
         return low_index, high_index
 
-    def n20_pam_index(self):
+    def _n20_pam_index(self):
         # finds the index between the n20 and the pam
         if self.n20 in self.sequence:
             low_index, high_index = self._get_low_high_n20_index(self.n20)
@@ -57,36 +61,36 @@ class Reference(object):
         else:
             return low_index
 
-    def cutsite_index(self):
+    def _cutsite_index(self):
         if self.is_ngg():
-            return self.n20_pam_index() - 3
+            return self.n20_pam_index - 3
         else:
-            return self.n20_pam_index() + 3
+            return self.n20_pam_index + 3
 
-    def pam_index(self):
+    def _pam_index(self):
         if self.is_ngg():
-            return self.n20_pam_index() + 3
+            return self.n20_pam_index + 3
         else:
-            return self.n20_pam_index() - 3
+            return self.n20_pam_index - 3
 
-    def n20_index(self):
+    def _n20_index(self):
         if self.is_ngg():
-            return self.n20_pam_index() - len(self.n20)
+            return self.n20_pam_index - len(self.n20)
         else:
-            return self.n20_pam_index() + len(self.n20)
+            return self.n20_pam_index + len(self.n20)
 
     def _min_indel_dist(self, read):
         return min([self.distance_to_cutsite(i) for i in read.indels])
 
     def distance_to_cutsite(self, indel):
 
-        if indel.is_enveloping_cutsite(self.cutsite_index()):
+        if indel.is_enveloping_cutsite(self.cutsite_index):
             return 0
 
-        if indel.end_index < self.cutsite_index():
-            return indel.end_index - self.cutsite_index()
+        if indel.end_index < self.cutsite_index:
+            return indel.end_index - self.cutsite_index
         else:
-            return indel.start_index - self.cutsite_index()
+            return indel.start_index - self.cutsite_index
 
     def _min_abs_indel_dist(self, read):
         return min([abs(self.distance_to_cutsite(i)) for i in read.valid_indels])

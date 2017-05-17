@@ -81,8 +81,8 @@ class ReferenceProcessor(object):
                                                      aligned_pairs,
                                                      reference_sequence,
                                                      read_sequence,
-                                                     reference.pam_index(),
-                                                     reference.n20_index(),
+                                                     reference.pam_index,
+                                                     reference.n20_index,
                                                      reference.is_ngg())
 
             if relationship.is_insertion():
@@ -109,11 +109,11 @@ class ReferenceProcessor(object):
         """[Char], [Char], Reference, Read -> String, String"""
         # denotes the positions of the cutsite, the n20, and the pam
 
-        cutsite_index = reference.cutsite_index()
-        pam_index = reference.pam_index()
-        n20_pam_index = reference.n20_pam_index()
-        n20_index = reference.n20_index()
-
-        inserter = Cas9IndicatorInserter(cutsite_index, pam_index, n20_pam_index, n20_index, read.aligned_pairs, reference.is_ngg())
+        inserter = Cas9IndicatorInserter(reference.cutsite_index,
+                                         reference.pam_index,
+                                         reference.n20_pam_index,
+                                         reference.n20_index,
+                                         read.aligned_pairs,
+                                         reference.is_ngg())
 
         return inserter.insert_indicators(reference_presentation, read_presentation)

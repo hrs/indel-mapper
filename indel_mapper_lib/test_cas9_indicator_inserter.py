@@ -109,10 +109,10 @@ class TestCas9IndicatorInserter(unittest.TestCase):
 
         reference = Reference("test", n20, sequence, pam, [read])
 
-        inserter = Cas9IndicatorInserter(reference.cutsite_index(),
-                                      reference.pam_index(),
-                                      reference.n20_pam_index(),
-                                      reference.n20_index(),
+        inserter = Cas9IndicatorInserter(reference.cutsite_index,
+                                      reference.pam_index,
+                                      reference.n20_pam_index,
+                                      reference.n20_index,
                                       read.aligned_pairs,
                                       reference.is_ngg())
 
@@ -158,10 +158,10 @@ class TestCas9IndicatorInserterWithPadding(unittest.TestCase):
 
         reference =  Reference("test", n20, sequence, pam, [read_a, read_b, read_c, read_d])
 
-        inserter = Cas9IndicatorInserter(reference.cutsite_index(),
-                                      reference.pam_index(),
-                                      reference.n20_pam_index(),
-                                      reference.n20_index(),
+        inserter = Cas9IndicatorInserter(reference.cutsite_index,
+                                      reference.pam_index,
+                                      reference.n20_pam_index,
+                                      reference.n20_index,
                                       read_a.aligned_pairs,
                                       reference.is_ngg())
 
@@ -170,10 +170,10 @@ class TestCas9IndicatorInserterWithPadding(unittest.TestCase):
         self.assertEqual(result_reference, "tt|ccccgggg?||")
         self.assertEqual(result_read, "tt|ccccgggg?||")
 
-        inserter = Cas9IndicatorInserter(reference.cutsite_index(),
-                                      reference.pam_index(),
-                                      reference.n20_pam_index(),
-                                      reference.n20_index(),
+        inserter = Cas9IndicatorInserter(reference.cutsite_index,
+                                      reference.pam_index,
+                                      reference.n20_pam_index,
+                                      reference.n20_index,
                                       read_b.aligned_pairs,
                                       reference.is_ngg())
 
@@ -182,10 +182,10 @@ class TestCas9IndicatorInserterWithPadding(unittest.TestCase):
         self.assertEqual(result_reference, "tt|ccccgggga||aaa|cgg|tt")
         self.assertEqual(result_read, "tt|ccccgggga||aaa|cgg|tt")
 
-        inserter = Cas9IndicatorInserter(reference.cutsite_index(),
-                                      reference.pam_index(),
-                                      reference.n20_pam_index(),
-                                      reference.n20_index(),
+        inserter = Cas9IndicatorInserter(reference.cutsite_index,
+                                      reference.pam_index,
+                                      reference.n20_pam_index,
+                                      reference.n20_index,
                                       read_c.aligned_pairs,
                                       reference.is_ngg())
 
@@ -194,10 +194,10 @@ class TestCas9IndicatorInserterWithPadding(unittest.TestCase):
         self.assertEqual(result_reference, "tt|ccccgggga||")
         self.assertEqual(result_read, "tt|ccccgggga||")
 
-        inserter = Cas9IndicatorInserter(reference.cutsite_index(),
-                                      reference.pam_index(),
-                                      reference.n20_pam_index(),
-                                      reference.n20_index(),
+        inserter = Cas9IndicatorInserter(reference.cutsite_index,
+                                      reference.pam_index,
+                                      reference.n20_pam_index,
+                                      reference.n20_index,
                                       read_d.aligned_pairs,
                                       reference.is_ngg())
 
@@ -225,10 +225,10 @@ class TestCas9IndicatorInserterWithPadding(unittest.TestCase):
 
         reference =  Reference("test", n20, sequence, pam, [read_a, read_b, read_c])
 
-        inserter = Cas9IndicatorInserter(reference.cutsite_index(),
-                                      reference.pam_index(),
-                                      reference.n20_pam_index(),
-                                      reference.n20_index(),
+        inserter = Cas9IndicatorInserter(reference.cutsite_index,
+                                      reference.pam_index,
+                                      reference.n20_pam_index,
+                                      reference.n20_index,
                                       read_a.aligned_pairs,
                                       reference.is_ngg())
 
@@ -237,10 +237,10 @@ class TestCas9IndicatorInserterWithPadding(unittest.TestCase):
         self.assertEqual(result_reference, "a|cct|ccc||cggggaaaa|t")
         self.assertEqual(result_read, "a|cct|ccc||cggggaaaa|t")
 
-        inserter = Cas9IndicatorInserter(reference.cutsite_index(),
-                                      reference.pam_index(),
-                                      reference.n20_pam_index(),
-                                      reference.n20_index(),
+        inserter = Cas9IndicatorInserter(reference.cutsite_index,
+                                      reference.pam_index,
+                                      reference.n20_pam_index,
+                                      reference.n20_index,
                                       read_b.aligned_pairs,
                                       reference.is_ngg())
 
@@ -249,10 +249,10 @@ class TestCas9IndicatorInserterWithPadding(unittest.TestCase):
         self.assertEqual(result_reference, "aaa|cct???||")
         self.assertEqual(result_read, "aaa|cct???||")
 
-        inserter = Cas9IndicatorInserter(reference.cutsite_index(),
-                                      reference.pam_index(),
-                                      reference.n20_pam_index(),
-                                      reference.n20_index(),
+        inserter = Cas9IndicatorInserter(reference.cutsite_index,
+                                      reference.pam_index,
+                                      reference.n20_pam_index,
+                                      reference.n20_index,
                                       read_c.aligned_pairs,
                                       reference.is_ngg())
 

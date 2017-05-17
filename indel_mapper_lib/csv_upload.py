@@ -28,3 +28,9 @@ class CsvUpload(object):
     def _csv_file_name(self):
         now = datetime.datetime.now()
         return now.strftime("results-%Y-%m-%d-%H-%M-%S-%f.csv")
+
+
+class NullCsvUpload(object):
+    def __init__(self):
+        self.succeeded = False
+        self.url = None

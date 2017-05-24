@@ -31,7 +31,7 @@
       {% block body %}
       {% endblock body %}
 
-      <form method="POST" enctype="multipart/form-data">
+      <form method="POST" action="/" enctype="multipart/form-data">
         <div>
           <label for="alignment">Alignment SAM File</label>
           <input name="alignment" type="file">
@@ -60,42 +60,6 @@
       </div>
 
       <hr></hr>
-
-      {% if upload.succeeded %}
-        <p>[<a href="{{ upload.url }}">Download a CSV</a>]</p>
-      {% endif %}
-
-      {% for reference_presenter in results %}
-      <div class="result">
-        <h2>{{ reference_presenter.name() }}</h2>
-
-        <p>Sequence: <span class="sequence tiny-text">{{ reference_presenter.sequence() }}</span></p>
-        <p>N20: <span class="sequence">{{ reference_presenter.n20() }}</span></p>
-        <p>PAM: <span class="sequence">{{ reference_presenter.pam() }}</span></p>
-        <p>Total Reads: <span>{{ reference_presenter.total_reads() }}</span></p>
-        <div class="accordion">
-          {% for cluster in reference_presenter.mutation_clusters %}
-          <h3>Cutsite: {{ cluster.description }} ----- ({{ cluster.count() }})
-            <span class="sequence tiny-text">
-              <p>{{ cluster.cas9_region.reference }}</p>
-              <p>{{ cluster.cas9_region.read }}</p>
-            </span>
-          </h3>
-          <div class="region-results">
-            <div class="region-container">
-            {% for alignment in cluster.alignments %}
-            <div class="sequence tiny-text">
-               <p>Ref : {{ alignment.reference }}</p>
-               <p>Read: {{ alignment.read }}</p>
-            </div>
-            {% endfor %}
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
 
     <footer>
       <p>Indel Mapper is free software, licensed under the <a href="https://gnu.org/licenses/gpl.html">GPLv3</a>. The code is available on <a href="https://github.com/hrs/indel-mapper">GitHub</a>.</p>

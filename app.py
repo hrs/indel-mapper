@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, flash
+from flask import Flask, render_template, request, flash, redirect, url_for
 from indel_mapper_lib.sam_parser import SamParser
 from indel_mapper_lib.reference_parser import ReferenceParser
 from indel_mapper_lib.presenter import Presenter
@@ -86,8 +86,11 @@ def _compute_indels_near_cutsite(self, sam_file, csv_file):
     reference_name_to_reads = SamParser(pysam.AlignmentFile(sam_file_name, "rb")).reference_name_to_reads_dict()
     references = ReferenceParser(csv.reader(open(csv_file_name)), reference_name_to_reads).references()
     presenter_results = Presenter([reference for reference in references if reference.is_valid])
+    results = presenter_results.present()
 
-    render_template("index.html", results=presenter_results.present(), upload=[])
+    json_results = [result.to_dict() for result in results]
+    print(json_results)
+    return json_results
 
 def _upload(results):
     if not app.s3_is_configured:
@@ -107,11 +110,13 @@ def _upload(results):
 
 @app.route('/status/<task_id>')
 def taskstatus(task_id):
-    long_task.AsyncResult(task_id)
+    task = long_task.AsyncResult(task_id)
     if task.state == 'SUCCESS':
-        render_template("index.html", results=task.result, upload=[])
+        return render_template("status.html", results=task.result, upload=[], processing=False)
+    elif task.state == 'FAILURE':
+        return render_template("status.html", results=[], upload=[], processing=False)
     else:
-        render_template("index.html", results=[], upload=[])
+        return render_template("status.html", results=[], upload=[], processing=True)
 
 if __name__ == "__main__":
     app.run()

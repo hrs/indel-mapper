@@ -12,6 +12,8 @@ source indel-mapper/bin/activate
 pip3 install -r requirements.txt
 ```
 
+Install Redis
+
 ## Web application
 
 Run the application:
@@ -20,11 +22,27 @@ Run the application:
 python3 app.py
 ```
 
+Run Redis
+
+```shell
+src/redis-server
+```
+
+Run Celery
+
+```shell
+indel-mapper/bin/celery worker -A app.celery --loglevel=info
+```
+
+## Testing
+
 Run the tests:
 
 ```shell
 python3 -m unittest
 ```
+
+## Deploying
 
 Deploy to Heroku:
 

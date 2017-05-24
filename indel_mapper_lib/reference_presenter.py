@@ -23,3 +23,14 @@ class ReferencePresenter(object):
 
     def csv_row_prefix_cells(self):
         return [self.name(), self.total_reads()]
+
+    def to_dict(self):
+        return {
+            "name": self.name(),
+            "sequence": self.sequence(),
+            "n20": self.n20(),
+            "pam": self.pam(),
+            "has_mutation_clusters": self.has_mutation_clusters(),
+            "total_reads": self.total_reads(),
+            "mutation_clusters": [cluster.to_dict() for cluster in self.mutation_clusters]
+        }

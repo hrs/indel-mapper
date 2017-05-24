@@ -23,3 +23,9 @@ class Alignment(object):
 
     def __repr__(self):
         return "({}, {})".format(self.reference, self.read)
+
+    def to_dict(self):
+        return {
+            "read": self.read,
+            "reference": self.reference,
+        }

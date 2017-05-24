@@ -32,3 +32,11 @@ class MutationCluster(object):
     def _has_unmatched_bases_right_of_cutsite(self, cutsite):
         index = cutsite + 1
         return index < len(self.cas9_region.read) and self.cas9_region.has_unmatched_bases_at(index)
+
+    def to_dict(self):
+        return {
+            "cas9_region": self.cas9_region.to_dict(),
+            "count": self.count(),
+            "description": self.description,
+            "alignments": [alignment.to_dict() for alignment in self.alignments]
+        }

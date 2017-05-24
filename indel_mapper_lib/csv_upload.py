@@ -5,10 +5,10 @@ import os
 
 class CsvUpload(object):
     BUCKET_NAME = "indel-mapper"
-    S3_ACCESS_KEY = os.environ["S3_ACCESS_KEY"]
-    S3_SECRET_KEY = os.environ["S3_SECRET_KEY"]
 
-    def __init__(self, file):
+    def __init__(self, s3_access_key, s3_secret_key, file):
+        self.s3_access_key = s3_access_key
+        self.s3_secret_key = s3_secret_key
         self._try_uploading(file)
 
     def _try_uploading(self, file):
@@ -26,8 +26,8 @@ class CsvUpload(object):
 
     def _s3(self):
         return boto3.resource("s3",
-                              aws_access_key_id=self.S3_ACCESS_KEY,
-                              aws_secret_access_key=self.S3_SECRET_KEY)
+                              aws_access_key_id=self.s3_access_key,
+                              aws_secret_access_key=self.s3_secret_key)
 
     def _upload(self, file, filename):
         self._s3().Bucket(self.BUCKET_NAME).upload_fileobj(file, filename)

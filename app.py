@@ -19,6 +19,13 @@ app = Flask(__name__)
 app.secret_key = os.environ["SECRET_FLASK_KEY"]
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_BYTES
 
+if "S3_ACCESS_KEY" in os.environ and "S3_SECRET_KEY" in os.environ:
+    app.s3_access_key = os.environ["S3_ACCESS_KEY"]
+    app.s3_secret_key = os.environ["S3_SECRET_KEY"]
+    app.s3_is_configured = True
+else:
+    app.s3_is_configured = False
+
 @app.route("/", methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -40,6 +47,7 @@ def index():
                                        results=results,
                                        upload=upload)
             except Exception as e:
+                print(e)
                 flash("Error processing.")
                 return render_template("index.html", results=[], upload=NullCsvUpload())
     return render_template("index.html", results=[], upload=NullCsvUpload())
@@ -65,13 +73,18 @@ def _compute_indels_near_cutsite(sam_file, csv_file):
     return presenter_results.present()
 
 def _upload(results):
+    if not app.s3_is_configured:
+        print("CsvUpload isn't configured, can't upload CSV to S3.")
+        return NullCsvUpload()
+
     # Write a temporary CSV file with an unlikely-to-collide name.
     random_string = binascii.hexlify(os.urandom(16))
     csv_temp_filename = "/tmp/{}.csv".format(random_string)
     CsvWriter(results).write_to(csv_temp_filename)
 
     # Upload it to S3.
-    upload = CsvUpload(open(csv_temp_filename, "rb"))
+    upload = CsvUpload(app.s3_access_key, app.s3_secret_key,
+                       open(csv_temp_filename, "rb"))
     os.remove(csv_temp_filename)
     return upload
 

@@ -5,6 +5,7 @@ from indel_mapper_lib.presenter import Presenter
 from indel_mapper_lib.csv_writer import CsvWriter
 from indel_mapper_lib.csv_upload import CsvUpload
 from indel_mapper_lib.csv_upload import NullCsvUpload
+from indel_mapper_lib.reference_presenter import ReferencePresenter
 from werkzeug.utils import secure_filename
 from io import StringIO
 import binascii
@@ -14,7 +15,7 @@ import pysam
 from celery import Celery
 
 MAX_CONTENT_BYTES = 20 * 1024 * 1024 # 20MB
-UPLOAD_FOLDER = "tmp/"
+UPLOAD_FOLDER = "/tmp"
 
 # Flask
 
@@ -31,8 +32,8 @@ else:
     app.s3_is_configured = False
 
 if "REDIS_URL" in os.environ:
-    app.config['CELERY_BROKER_URL'] = os.environ['REDIS_URL'] #'redis://localhost:6379/0'
-    app.config['CELERY_RESULT_BACKEND'] = os.environ['REDIS_URL'] #'redis://localhost:6379/0'
+    app.config['CELERY_BROKER_URL'] = os.environ['REDIS_URL']
+    app.config['CELERY_RESULT_BACKEND'] = os.environ['REDIS_URL']
 else:
     app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
     app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
@@ -59,7 +60,7 @@ def index():
             try:
                 reference_file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(reference_file.filename)))
                 alignment_file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(alignment_file.filename)))
-                print(os.path.abspath("mydir/myfile.txt"))
+
                 results = compute_indels_near_cutsite.apply_async(args=[secure_filename(alignment_file.filename), secure_filename(reference_file.filename)])
                 return redirect(url_for('taskstatus', task_id=results.id))
 
@@ -118,13 +119,16 @@ def _upload(results):
 def taskstatus(task_id):
     task = compute_indels_near_cutsite.AsyncResult(task_id)
     if task.state == 'SUCCESS':
-        #upload = _upload(task.result)
-        return render_template("status.html", results=task.result, upload=NullCsvUpload(), processing=False)
-    elif task.state == 'FAILURE':
+        reference_presenter_results = []
+        for reference_presenter_dict in task.result:
+            reference_presenter_results.append(ReferencePresenter(from_dict=reference_presenter_dict))
+        upload = _upload(reference_presenter_results)
+        return render_template("status.html", results=reference_presenter_results, upload=upload, processing=False)
+    elif task.state == 'PROGRESS':
+        return render_template("status.html", results=[], upload=NullCsvUpload(), processing=True)
+    else:
         flash("Error processing.")
         return render_template("status.html", results=[], upload=NullCsvUpload(), processing=False)
-    else:
-        return render_template("status.html", results=[], upload=NullCsvUpload(), processing=True)
 
 if __name__ == "__main__":
     app.run()

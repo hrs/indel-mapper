@@ -2,9 +2,12 @@ from .sequence_diff import SequenceDiff
 
 
 class Alignment(object):
-    def __init__(self, reference, read):
-        self.reference = reference
-        self.read = read
+    def __init__(self, reference=None, read=None, from_dict=None):
+        if from_dict is not None:
+            self._init_from_dict(from_dict)
+        else:
+            self.reference = reference
+            self.read = read
 
     def description(self):
         return SequenceDiff(self.reference, self.read).description()
@@ -29,3 +32,7 @@ class Alignment(object):
             "read": self.read,
             "reference": self.reference,
         }
+
+    def _init_from_dict(self, alignment_dict):
+        self.read = alignment_dict["read"]
+        self.reference = alignment_dict["reference"]

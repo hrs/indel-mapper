@@ -61,26 +61,24 @@ def index():
         else:
             try:
                 # random, unlikely to collide names
-                tmp_reference_path = _random_tempfile_name()
-                tmp_alignment_path = _random_tempfile_name()
+                tmp_reference_path = _random_tempfile_path()
+                tmp_alignment_path = _random_tempfile_path()
 
                 reference_file.save(tmp_reference_path)
                 alignment_file.save(tmp_alignment_path)
 
                 if app.s3_is_configured:
-                    reference_upload = AwsUpload(app.s3_access_key,
-                                                 app.s3_secret_key,
-                                                 open(tmp_reference_path, "rb"),
-                                                 tmp_reference_filename)
-                    alignment_upload = AwsUpload(app.s3_access_key,
-                                                 app.s3_secret_key,
-                                                 open(tmp_alignment_path, "rb"),
-                                                 tmp_alignment_filename)
+                    reference_upload = _upload_file(tmp_reference_path, _random_filename())
+                    alignment_upload = _upload_file(tmp_alignment_path, _random_filename())
                     results = compute_indels_near_cutsite.apply_async(args=[reference_upload.url, alignment_upload.url])
-                    os.remove(tmp_reference_path)
-                    os.remove(tmp_alignment_path)
                 else:
                     results = compute_indels_near_cutsite.apply_async(args=[tmp_reference_path, tmp_alignment_path])
+
+                # Remove temporary files
+                os.remove(tmp_reference_path)
+                os.remove(tmp_alignment_path)
+
+                # Display the status page containing the results
                 return redirect(url_for('taskstatus', task_id=results.id))
 
             except Exception as e:
@@ -121,18 +119,25 @@ def compute_indels_near_cutsite(self, csv_path, sam_path):
 
     return json_results
 
-def _random_tempfile_name():
-    "Return a random filename in the upload directory. Useful for avoiding collisions."
-    random_string = binascii.hexlify(os.urandom(16)).decode("utf-8")
-    return os.path.join(app.config["UPLOAD_FOLDER"], random_string)
+def _random_filename():
+    return binascii.hexlify(os.urandom(16)).decode("utf-8")
 
-def _upload(results):
+def _random_tempfile_path():
+    return os.path.join(app.config["UPLOAD_FOLDER"], _random_filename())
+
+def _upload_file(local_filename, remote_filename):
+    return AwsUpload(app.s3_access_key,
+                    app.s3_secret_key,
+                    open(local_filename, "rb"),
+                    remote_filename)
+
+def _upload_results(results):
     if not app.s3_is_configured:
         print("Aws isn't configured, can't upload CSV to S3.")
         return NullCsvUpload()
 
     # Write a temporary CSV file.
-    csv_temp_filename = _random_tempfile_name()
+    csv_temp_filename = _random_tempfile_path()
     CsvWriter(results).write_to(csv_temp_filename)
 
     # Upload it to S3.
@@ -148,7 +153,7 @@ def taskstatus(task_id):
         reference_presenter_results = []
         for reference_presenter_dict in task.result:
             reference_presenter_results.append(ReferencePresenter(from_dict=reference_presenter_dict))
-        upload = _upload(reference_presenter_results)
+        upload = _upload_results(reference_presenter_results)
         return render_template("status.html", results=reference_presenter_results, upload=upload, processing=False)
     elif task.state == states.FAILURE:
         flash("Error processing.")

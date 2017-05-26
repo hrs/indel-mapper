@@ -6,6 +6,7 @@ from indel_mapper_lib.csv_writer import CsvWriter
 from indel_mapper_lib.csv_upload import CsvUpload
 from indel_mapper_lib.csv_upload import NullCsvUpload
 from indel_mapper_lib.reference_presenter import ReferencePresenter
+from indel_mapper_lib.aws_upload import AwsUpload
 from werkzeug.utils import secure_filename
 from io import StringIO
 import binascii
@@ -13,6 +14,8 @@ import csv
 import os
 import pysam
 from celery import Celery
+from celery import states
+import urllib.request
 
 MAX_CONTENT_BYTES = 20 * 1024 * 1024 # 20MB
 UPLOAD_FOLDER = "/tmp"
@@ -58,10 +61,32 @@ def index():
             flash("The alignment file must be a .sam file.")
         else:
             try:
-                reference_file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(reference_file.filename)))
-                alignment_file.save(os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(alignment_file.filename)))
 
-                results = compute_indels_near_cutsite.apply_async(args=[secure_filename(alignment_file.filename), secure_filename(reference_file.filename)])
+                # random, unlikely to collide names
+
+                tmp_reference_filename, tmp_alignment_filename = _get_tmp_reference_and_alignment_filenames()
+                tmp_reference_path = os.path.join(app.config['UPLOAD_FOLDER'], tmp_reference_filename)
+                tmp_alignment_path = os.path.join(app.config['UPLOAD_FOLDER'], tmp_alignment_filename)
+
+                reference_file.save(tmp_reference_path)
+                alignment_file.save(tmp_alignment_path)
+
+                if app.s3_is_configured:
+                    reference_upload = AwsUpload(app.s3_access_key,
+                                                 app.s3_secret_key,
+                                                 open(tmp_reference_path, "rb"),
+                                                 tmp_reference_filename)
+                    alignment_upload = AwsUpload(app.s3_access_key,
+                                                 app.s3_secret_key,
+                                                 open(tmp_alignment_path, "rb"),
+                                                 tmp_alignment_filename)
+                    results = compute_indels_near_cutsite.apply_async(args=[reference_upload.url, alignment_upload.url])
+                    os.remove(tmp_reference_path)
+                    os.remove(tmp_alignment_path)
+                else:
+                    print(tmp_alignment_path)
+                    print(tmp_reference_path)
+                    results = compute_indels_near_cutsite.apply_async(args=[tmp_reference_path, tmp_alignment_path])
                 return redirect(url_for('taskstatus', task_id=results.id))
 
             except Exception as e:
@@ -81,31 +106,39 @@ def _is_extension(filestorage, extension):
     filename = filestorage.filename
     return filename.endswith(extension)
 
-@celery.task(bind=True)
-def compute_indels_near_cutsite(self, sam_file, csv_file):
-    self.update_state(state="PROGRESS")
-    try:
-        sam_file_name = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(sam_file))
-        csv_file_name = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(csv_file))
-        reference_name_to_reads = SamParser(pysam.AlignmentFile(sam_file_name, "rb")).reference_name_to_reads_dict()
-        references = ReferenceParser(csv.reader(open(csv_file_name)), reference_name_to_reads).references()
-        presenter_results = Presenter([reference for reference in references if reference.is_valid])
-        results = presenter_results.present()
+def _get_tmp_reference_and_alignment_filenames():
+    random_number = binascii.hexlify(os.urandom(16)).decode("utf-8")
+    return "reference_{}.csv".format(random_number), "alignment_{}.sam".format(random_number)
 
-        json_results = [result.to_dict() for result in results]
-        return json_results
-    except Exception as e:
-        print(e)
-        self.update_state(state="FAILURE")
-        return {}
+@celery.task(bind=True)
+def compute_indels_near_cutsite(self, csv_path, sam_path):
+    if app.s3_is_configured:
+        tmp_reference_filename, tmp_alignment_filename = _get_tmp_reference_and_alignment_filenames()
+        csv_path = os.path.join(app.config['UPLOAD_FOLDER'], tmp_reference_filename)
+        sam_path = os.path.join(app.config['UPLOAD_FOLDER'], tmp_alignment_filename)
+        urllib.request.urlretrieve(url, csv_path)
+        urllib.request.urlretrieve(url, sam_path)
+
+    print(sam_path)
+    reference_name_to_reads = SamParser(pysam.AlignmentFile(sam_path, "rb")).reference_name_to_reads_dict()
+    references = ReferenceParser(csv.reader(open(csv_path)), reference_name_to_reads).references()
+    presenter_results = Presenter([reference for reference in references if reference.is_valid])
+    results = presenter_results.present()
+
+    json_results = [result.to_dict() for result in results]
+
+    os.remove(sam_path)
+    os.remove(csv_path)
+
+    return json_results
 
 def _upload(results):
     if not app.s3_is_configured:
-        print("CsvUpload isn't configured, can't upload CSV to S3.")
+        print("Aws isn't configured, can't upload CSV to S3.")
         return NullCsvUpload()
 
     # Write a temporary CSV file with an unlikely-to-collide name.
-    random_string = binascii.hexlify(os.urandom(16))
+    random_string = binascii.hexlify(os.urandom(16)).decode("utf-8")
     csv_temp_filename = "/tmp/{}.csv".format(random_string)
     CsvWriter(results).write_to(csv_temp_filename)
 
@@ -118,17 +151,18 @@ def _upload(results):
 @app.route('/status/<task_id>')
 def taskstatus(task_id):
     task = compute_indels_near_cutsite.AsyncResult(task_id)
-    if task.state == 'SUCCESS':
+    print(task.state)
+    if task.state == states.SUCCESS:
         reference_presenter_results = []
         for reference_presenter_dict in task.result:
             reference_presenter_results.append(ReferencePresenter(from_dict=reference_presenter_dict))
         upload = _upload(reference_presenter_results)
         return render_template("status.html", results=reference_presenter_results, upload=upload, processing=False)
-    elif task.state == 'PROGRESS':
-        return render_template("status.html", results=[], upload=NullCsvUpload(), processing=True)
-    else:
+    elif task.state == states.FAILURE:
         flash("Error processing.")
         return render_template("status.html", results=[], upload=NullCsvUpload(), processing=False)
+    else:
+        return render_template("status.html", results=[], upload=NullCsvUpload(), processing=True)
 
 if __name__ == "__main__":
     app.run()

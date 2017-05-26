@@ -114,10 +114,12 @@ def _get_tmp_reference_and_alignment_filenames():
 def compute_indels_near_cutsite(self, csv_path, sam_path):
     if app.s3_is_configured:
         tmp_reference_filename, tmp_alignment_filename = _get_tmp_reference_and_alignment_filenames()
-        csv_path = os.path.join(app.config['UPLOAD_FOLDER'], tmp_reference_filename)
-        sam_path = os.path.join(app.config['UPLOAD_FOLDER'], tmp_alignment_filename)
-        urllib.request.urlretrieve(url, csv_path)
-        urllib.request.urlretrieve(url, sam_path)
+        tmp_csv_path = os.path.join(app.config['UPLOAD_FOLDER'], tmp_reference_filename)
+        tmp_sam_path = os.path.join(app.config['UPLOAD_FOLDER'], tmp_alignment_filename)
+        urllib.request.urlretrieve(csv_path, tmp_csv_path)
+        urllib.request.urlretrieve(sam_path, tmp_sam_path)
+        csv_path = tmp_csv_path
+        sam_path = tmp_sam_path
 
     print(sam_path)
     reference_name_to_reads = SamParser(pysam.AlignmentFile(sam_path, "rb")).reference_name_to_reads_dict()

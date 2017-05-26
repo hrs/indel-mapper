@@ -1,5 +1,5 @@
-MAX_ALIGNMENT_FILE_SIZE = 16 * 1024 * 1024; // 16MB
-MAX_REFERENCE_FILE_SIZE = 3 * 1024 * 1024; // 3MB
+MAX_ALIGNMENT_FILE_SIZE = 80 * 1024 * 1024; // 80MB
+MAX_REFERENCE_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 function endsWith(str, suffix) {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;

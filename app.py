@@ -17,7 +17,7 @@ from celery import Celery
 from celery import states
 import urllib.request
 
-MAX_CONTENT_BYTES = 20 * 1024 * 1024 # 20MB
+MAX_CONTENT_BYTES = 85 * 1024 * 1024 # 85MB
 UPLOAD_FOLDER = "/tmp"
 
 # Flask
@@ -84,8 +84,6 @@ def index():
                     os.remove(tmp_reference_path)
                     os.remove(tmp_alignment_path)
                 else:
-                    print(tmp_alignment_path)
-                    print(tmp_reference_path)
                     results = compute_indels_near_cutsite.apply_async(args=[tmp_reference_path, tmp_alignment_path])
                 return redirect(url_for('taskstatus', task_id=results.id))
 
@@ -118,19 +116,19 @@ def compute_indels_near_cutsite(self, csv_path, sam_path):
         tmp_sam_path = os.path.join(app.config['UPLOAD_FOLDER'], tmp_alignment_filename)
         urllib.request.urlretrieve(csv_path, tmp_csv_path)
         urllib.request.urlretrieve(sam_path, tmp_sam_path)
-        csv_path = tmp_csv_path
-        sam_path = tmp_sam_path
+    else:
+        tmp_csv_path = csv_path
+        tmp_sam_path = sam_path
 
-    print(sam_path)
-    reference_name_to_reads = SamParser(pysam.AlignmentFile(sam_path, "rb")).reference_name_to_reads_dict()
-    references = ReferenceParser(csv.reader(open(csv_path)), reference_name_to_reads).references()
+    reference_name_to_reads = SamParser(pysam.AlignmentFile(tmp_sam_path, "rb")).reference_name_to_reads_dict()
+    references = ReferenceParser(csv.reader(open(tmp_csv_path)), reference_name_to_reads).references()
     presenter_results = Presenter([reference for reference in references if reference.is_valid])
     results = presenter_results.present()
 
     json_results = [result.to_dict() for result in results]
 
-    os.remove(sam_path)
-    os.remove(csv_path)
+    os.remove(tmp_sam_path)
+    os.remove(tmp_csv_path)
 
     return json_results
 
@@ -153,7 +151,6 @@ def _upload(results):
 @app.route('/status/<task_id>')
 def taskstatus(task_id):
     task = compute_indels_near_cutsite.AsyncResult(task_id)
-    print(task.state)
     if task.state == states.SUCCESS:
         reference_presenter_results = []
         for reference_presenter_dict in task.result:

@@ -17,15 +17,14 @@ from celery import Celery
 from celery import states
 import urllib.request
 
-MAX_CONTENT_BYTES = 45 * 1024 * 1024 # 45MB
-UPLOAD_FOLDER = "/tmp"
+LOCAL_REDIS_URL = "redis://localhost:6379/0"
 
 # Flask
 
 app = Flask(__name__)
 app.secret_key = os.environ["SECRET_FLASK_KEY"]
-app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_BYTES
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config["MAX_CONTENT_LENGTH"] = 45 * 1024 * 1024 # 45 MB
+app.config["UPLOAD_FOLDER"] = "/tmp"
 
 if "S3_ACCESS_KEY" in os.environ and "S3_SECRET_KEY" in os.environ:
     app.s3_access_key = os.environ["S3_ACCESS_KEY"]
@@ -35,15 +34,15 @@ else:
     app.s3_is_configured = False
 
 if "REDIS_URL" in os.environ:
-    app.config['CELERY_BROKER_URL'] = os.environ['REDIS_URL']
-    app.config['CELERY_RESULT_BACKEND'] = os.environ['REDIS_URL']
+    app.config["CELERY_BROKER_URL"] = os.environ["REDIS_URL"]
+    app.config["CELERY_RESULT_BACKEND"] = os.environ["REDIS_URL"]
 else:
-    app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
-    app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+    app.config["CELERY_BROKER_URL"] = LOCAL_REDIS_URL
+    app.config["CELERY_RESULT_BACKEND"] = LOCAL_REDIS_URL
 
 # Celery
 
-celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery = Celery(app.name, broker=app.config["CELERY_BROKER_URL"])
 celery.conf.update(app.config)
 
 
@@ -123,9 +122,9 @@ def compute_indels_near_cutsite(self, csv_path, sam_path):
     return json_results
 
 def _random_tempfile_name():
-    "Return a random filename in /tmp. Useful for avoiding collisions."
+    "Return a random filename in the upload directory. Useful for avoiding collisions."
     random_string = binascii.hexlify(os.urandom(16)).decode("utf-8")
-    return "/tmp/" + random_string
+    return os.path.join(app.config["UPLOAD_FOLDER"], random_string)
 
 def _upload(results):
     if not app.s3_is_configured:

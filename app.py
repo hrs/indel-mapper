@@ -93,13 +93,13 @@ def index():
                 return render_template("index.html", results=[], upload=NullCsvUpload())
     return render_template("index.html", results=[], upload=NullCsvUpload())
 
-# HTTP Error 413 Request Entity Too Large
+# HTTP Error 413: Request Entity Too Large
 @app.errorhandler(413)
 def request_entity_too_large(error):
     flash("Uploaded file is too large.")
     return render_template("index.html", results=[], upload=NullCsvUpload()), 413
 
-# This is a first pass naive file detection.
+# This is a first pass at naive file detection.
 def _is_extension(filestorage, extension):
     filename = filestorage.filename
     return filename.endswith(extension)

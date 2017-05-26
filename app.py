@@ -61,12 +61,9 @@ def index():
             flash("The alignment file must be a .sam file.")
         else:
             try:
-
                 # random, unlikely to collide names
-
-                tmp_reference_filename, tmp_alignment_filename = _get_tmp_reference_and_alignment_filenames()
-                tmp_reference_path = os.path.join(app.config['UPLOAD_FOLDER'], tmp_reference_filename)
-                tmp_alignment_path = os.path.join(app.config['UPLOAD_FOLDER'], tmp_alignment_filename)
+                tmp_reference_path = _random_tempfile_name()
+                tmp_alignment_path = _random_tempfile_name()
 
                 reference_file.save(tmp_reference_path)
                 alignment_file.save(tmp_alignment_path)
@@ -104,18 +101,11 @@ def _is_extension(filestorage, extension):
     filename = filestorage.filename
     return filename.endswith(extension)
 
-def _get_tmp_reference_and_alignment_filenames():
-    random_number = binascii.hexlify(os.urandom(16)).decode("utf-8")
-    return "reference_{}.csv".format(random_number), "alignment_{}.sam".format(random_number)
-
 @celery.task(bind=True)
 def compute_indels_near_cutsite(self, csv_path, sam_path):
     if app.s3_is_configured:
-        tmp_reference_filename, tmp_alignment_filename = _get_tmp_reference_and_alignment_filenames()
-        tmp_csv_path = os.path.join(app.config['UPLOAD_FOLDER'], tmp_reference_filename)
-        tmp_sam_path = os.path.join(app.config['UPLOAD_FOLDER'], tmp_alignment_filename)
-        urllib.request.urlretrieve(csv_path, tmp_csv_path)
-        urllib.request.urlretrieve(sam_path, tmp_sam_path)
+        tmp_csv_path, _ = urllib.request.urlretrieve(csv_path)
+        tmp_sam_path, _ = urllib.request.urlretrieve(sam_path)
     else:
         tmp_csv_path = csv_path
         tmp_sam_path = sam_path
@@ -132,14 +122,18 @@ def compute_indels_near_cutsite(self, csv_path, sam_path):
 
     return json_results
 
+def _random_tempfile_name():
+    "Return a random filename in /tmp. Useful for avoiding collisions."
+    random_string = binascii.hexlify(os.urandom(16)).decode("utf-8")
+    return "/tmp/" + random_string
+
 def _upload(results):
     if not app.s3_is_configured:
         print("Aws isn't configured, can't upload CSV to S3.")
         return NullCsvUpload()
 
-    # Write a temporary CSV file with an unlikely-to-collide name.
-    random_string = binascii.hexlify(os.urandom(16)).decode("utf-8")
-    csv_temp_filename = "/tmp/{}.csv".format(random_string)
+    # Write a temporary CSV file.
+    csv_temp_filename = _random_tempfile_name()
     CsvWriter(results).write_to(csv_temp_filename)
 
     # Upload it to S3.

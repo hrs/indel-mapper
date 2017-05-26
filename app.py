@@ -17,7 +17,7 @@ from celery import Celery
 from celery import states
 import urllib.request
 
-MAX_CONTENT_BYTES = 45 * 1024 * 1024 # 85MB
+MAX_CONTENT_BYTES = 45 * 1024 * 1024 # 45MB
 UPLOAD_FOLDER = "/tmp"
 
 # Flask

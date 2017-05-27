@@ -4,58 +4,80 @@
 
 ## Set up
 
-Set up your environment:
+First, make sure the correct version of `virtualenv` is installed:
 
 ```shell
-virtualenv indel-mapper
-source indel-mapper/bin/activate
-pip3 install -r requirements.txt
+$ pip3 install virtualenv
 ```
 
-Install Redis
+Next, `cd` into your project and set up the `virtualenv` directory:
 
-## Web application
+```shell
+$ virtualenv --python=python3 indel-mapper
+```
+
+Activate `virtualenv`. This adds the `indel-mapper/bin` directory to the start
+of your `$PATH`.
+
+```shell
+$ source indel-mapper/bin/activate
+```
+
+Install the required libraries:
+
+```shell
+$ pip3 install -r requirements.txt
+```
+
+Install the Redis server. The instructions for this will vary depending on your
+operating system. For Debian, Ubuntu, and derivatives,
+
+```shell
+$ sudo apt install redis-server
+```
+
+## Starting the Web application
 
 Run the application:
 
 ```shell
-python3 app.py
+$ python3 app.py
 ```
 
-Run Redis
+Start Redis. How you do this depends on your operating system.
+
+**Debian, Ubuntu, or derivatives:**
 
 ```shell
-src/redis-server
+$ sudo systemctl start redis-server
 ```
 
 Run Celery
 
 ```shell
-indel-mapper/bin/celery worker -A app.celery --loglevel=info
+$ indel-mapper/bin/celery worker -A app.celery --loglevel=info
 ```
 
-## Testing
+## Running the test suite
 
 Run the tests:
 
 ```shell
-python3 -m unittest
+$ python3 -m unittest
 ```
 
-## Deploying
-
-Deploy to Heroku:
+## Deploying to Heroku
 
 ```shell
-git push heroku master
+$ git push heroku master
 ```
 
-## Command line application
+## Running locally as a command line application
 
 Example:
 
 ```shell
-python3 run.py -a ~/Documents/bowtie2_results.sam -r ~/Documents/references.csv -o ~/Documents/results.csv
+$ python3 run.py -a ~/Documents/bowtie2_results.sam -r ~/Documents/references.csv -o ~/Documents/results.csv
 ```
 There are three required arguments:
 

@@ -71,9 +71,6 @@ def index():
                 reference_file.save(tmp_reference_path)
                 alignment_file.save(tmp_alignment_path)
 
-                print(tmp_alignment_path)
-                print(tmp_reference_path)
-
                 if app.s3_is_configured:
                     reference_upload = _upload_file(tmp_reference_path, _random_filename())
                     alignment_upload = _upload_file(tmp_alignment_path, _random_filename())
@@ -131,8 +128,8 @@ def compute_indels_near_cutsite(self, csv_path, sam_path):
         os.remove(tmp_csv_path)
 
         if app.s3_is_configured:
-            uploaded_results = _upload_results(temp_results_csv_path)
-            uploaded_json = _upload(tmp_json_path, _random_filename())
+            uploaded_results = _upload_results(tmp_results_csv_path)
+            uploaded_json = _upload_file(tmp_json_path, _random_filename())
 
             os.remove(tmp_results_csv_path)
             os.remove(tmp_json_path)

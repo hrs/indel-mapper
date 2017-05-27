@@ -1,20 +1,20 @@
-from flask import Flask, render_template, request, flash, redirect, url_for
-from indel_mapper_lib.sam_parser import SamParser
-from indel_mapper_lib.reference_parser import ReferenceParser
-from indel_mapper_lib.presenter import Presenter
-from indel_mapper_lib.csv_writer import CsvWriter
-from indel_mapper_lib.csv_upload import CsvUpload
-from indel_mapper_lib.csv_upload import NullCsvUpload
-from indel_mapper_lib.reference_presenter import ReferencePresenter
-from indel_mapper_lib.aws_upload import AwsUpload
-from werkzeug.utils import secure_filename
-from io import StringIO
-import binascii
-import csv
-import os
-import pysam
 from celery import Celery
 from celery import states
+from flask import Flask, render_template, request, flash, redirect, url_for
+from indel_mapper_lib.aws_upload import AwsUpload
+from indel_mapper_lib.csv_upload import CsvUpload
+from indel_mapper_lib.csv_upload import NullCsvUpload
+from indel_mapper_lib.csv_writer import CsvWriter
+from indel_mapper_lib.json_writer import JsonWriter
+from indel_mapper_lib.presenter import Presenter
+from indel_mapper_lib.reference_parser import ReferenceParser
+from indel_mapper_lib.reference_presenter import ReferencePresenter
+from indel_mapper_lib.sam_parser import SamParser
+import binascii
+import csv
+import json
+import os
+import pysam
 import urllib.request
 
 LOCAL_REDIS_URL = "redis://localhost:6379/0"
@@ -67,16 +67,19 @@ def index():
                 reference_file.save(tmp_reference_path)
                 alignment_file.save(tmp_alignment_path)
 
+                print(tmp_alignment_path)
+                print(tmp_reference_path)
+
                 if app.s3_is_configured:
                     reference_upload = _upload_file(tmp_reference_path, _random_filename())
                     alignment_upload = _upload_file(tmp_alignment_path, _random_filename())
                     results = compute_indels_near_cutsite.apply_async(args=[reference_upload.url, alignment_upload.url])
+
+                    # Remove temporary files
+                    os.remove(tmp_reference_path)
+                    os.remove(tmp_alignment_path)
                 else:
                     results = compute_indels_near_cutsite.apply_async(args=[tmp_reference_path, tmp_alignment_path])
-
-                # Remove temporary files
-                os.remove(tmp_reference_path)
-                os.remove(tmp_alignment_path)
 
                 # Display the status page containing the results
                 return redirect(url_for('taskstatus', task_id=results.id))
@@ -112,12 +115,27 @@ def compute_indels_near_cutsite(self, csv_path, sam_path):
     presenter_results = Presenter([reference for reference in references if reference.is_valid])
     results = presenter_results.present()
 
-    json_results = [result.to_dict() for result in results]
+    # Write a temporary results CSV file.
+    tmp_results_csv_path = _random_tempfile_path()
+    CsvWriter(results).write_to(tmp_results_csv_path)
+    # Write a temporary json to store display information.
+    tmp_json_path = _random_tempfile_path()
+    JsonWriter(results).write_to(tmp_json_path)
 
     os.remove(tmp_sam_path)
     os.remove(tmp_csv_path)
 
-    return json_results
+    if app.s3_is_configured:
+        uploaded_results = _upload_results(temp_results_csv_path)
+        uploaded_json = _upload(tmp_json_path, _random_filename())
+
+        os.remove(tmp_results_csv_path)
+        os.remove(tmp_json_path)
+
+        return {"csv": uploaded_results.url, "json": uploaded_json.url}
+
+    else:
+        return {"csv": tmp_results_csv_path, "json": tmp_json_path}
 
 def _random_filename():
     return binascii.hexlify(os.urandom(16)).decode("utf-8")
@@ -131,30 +149,39 @@ def _upload_file(local_filename, remote_filename):
                     open(local_filename, "rb"),
                     remote_filename)
 
-def _upload_results(results):
+def _upload_results(results_csv_filename):
     if not app.s3_is_configured:
         print("Aws isn't configured, can't upload CSV to S3.")
         return NullCsvUpload()
 
-    # Write a temporary CSV file.
-    csv_temp_filename = _random_tempfile_path()
-    CsvWriter(results).write_to(csv_temp_filename)
-
     # Upload it to S3.
     upload = CsvUpload(app.s3_access_key, app.s3_secret_key,
-                       open(csv_temp_filename, "rb"))
-    os.remove(csv_temp_filename)
+                       open(results_csv_filename, "rb"))
+
     return upload
 
 @app.route('/status/<task_id>')
 def taskstatus(task_id):
     task = compute_indels_near_cutsite.AsyncResult(task_id)
     if task.state == states.SUCCESS:
-        reference_presenter_results = []
-        for reference_presenter_dict in task.result:
-            reference_presenter_results.append(ReferencePresenter(from_dict=reference_presenter_dict))
-        upload = _upload_results(reference_presenter_results)
-        return render_template("status.html", results=reference_presenter_results, upload=upload, processing=False)
+        task_csv = task.result["csv"]
+        task_json = task.result["json"]
+
+        if task_csv == "" or task_json == "":
+            flash("Error processing.")
+            return render_template("status.html", results=[], upload=NullCsvUpload(), processing=False)
+
+        if app.s3_is_configured:
+            tmp_json_path, _ = urllib.request.urlretrieve(task_json)
+        else:
+            tmp_json_path = task_json
+
+        json_file = open(tmp_json_path, "r")
+        reference_presenter_results = json.loads(json_file.read())
+
+        os.remove(tmp_json_path)
+
+        return render_template("status.html", results=reference_presenter_results, upload=task_csv, processing=False)
     elif task.state == states.FAILURE:
         flash("Error processing.")
         return render_template("status.html", results=[], upload=NullCsvUpload(), processing=False)

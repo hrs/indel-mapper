@@ -37,23 +37,23 @@
       {% endif %}
 
       {% if upload.succeeded %}
-        <p>[<a href="{{ upload.url }}">Download a CSV</a>]</p>
+        <p>[<a href="{{ upload }}">Download a CSV</a>]</p>
       {% endif %}
 
       {% for reference_presenter in results %}
         <div class="result">
-          <h2>{{ reference_presenter.name() }}</h2>
+          <h2>{{ reference_presenter["name"] }}</h2>
 
-          <p>Sequence: <span class="sequence tiny-text">{{ reference_presenter.sequence() }}</span></p>
-          <p>N20: <span class="sequence">{{ reference_presenter.n20() }}</span></p>
-          <p>PAM: <span class="sequence">{{ reference_presenter.pam() }}</span></p>
-          <p>Total Reads: <span>{{ reference_presenter.total_reads() }}</span></p>
+          <p>Sequence: <span class="sequence tiny-text">{{ reference_presenter["sequence"] }}</span></p>
+          <p>N20: <span class="sequence">{{ reference_presenter["n20"] }}</span></p>
+          <p>PAM: <span class="sequence">{{ reference_presenter["pam"] }}</span></p>
+          <p>Total Reads: <span>{{ reference_presenter["total_reads"] }}</span></p>
           <div class="accordion">
-            {% for cluster in reference_presenter.mutation_clusters %}
-              <h3>Cutsite: {{ cluster.description }} ----- ({{ cluster.count() }})
+            {% for cluster in reference_presenter["mutation_clusters"] %}
+              <h3>Cutsite: {{ cluster["description"] }} ----- ({{ cluster["count"] }})
                 <span class="sequence tiny-text">
-                  <p>{{ cluster.cas9_region.reference }}</p>
-                  <p>{{ cluster.cas9_region.read }}</p>
+                  <p>{{ cluster.cas9_region["reference"] }}</p>
+                  <p>{{ cluster.cas9_region["read"] }}</p>
                 </span>
               </h3>
               <div class="region-results">

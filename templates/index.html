@@ -24,30 +24,35 @@
               <li>{{ f }}</li>
               {% endfor %}
             </ul>
-        {% endif %}
-      {% endwith %}
+		{% endif %}
+	  {% endwith %}
       </div>
 
       {% block body %}
       {% endblock body %}
 
-      <form method="POST" action="/" enctype="multipart/form-data">
-        <div>
-          <label for="alignment">Alignment SAM File</label>
-          <input name="alignment" type="file">
-          <p> The alignment SAM file is the output of bowtie2 alignment. (Max size 40MB) <p>
-        </div>
 
-        <div>
-          <label for="reference">Reference CSV File</label>
-          <input name="reference" type="file">
-          <p>The reference CSV file should contain name of the reference, reference sequence, n20, and pam.</p>
-        </div>
+	  <div>
+        <label for="alignment">Alignment SAM File</label>
+        <input name="alignment" type="file">
+        <p> The alignment SAM file is the output of bowtie2 alignment. (Max size 40MB) <p>
+      </div>
 
-        <div>
-          <input type="submit" value="Submit">
-        </div>
+      <div>
+        <label for="reference">Reference CSV File</label>
+        <input name="reference" type="file">
+        <p>The reference CSV file should contain name of the reference, reference sequence, n20, and pam.</p>
+      </div>
+
+
+      <form method="POST" action="/process_files/">
+        <input name="alignment-hidden" type="hidden">
+        <input name="reference-hidden" type="hidden">
       </form>
+
+      <div>
+        <input name="submit" type="submit" value="Submit">
+      </div>
 
       <hr></hr>
 

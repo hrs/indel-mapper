@@ -46,7 +46,7 @@ else:
 celery = Celery(app.name,
                 broker=app.config["CELERY_BROKER_URL"],
                 task_track_started=True,
-                task_soft_time_limit=150)
+                task_soft_time_limit=350)
 celery.conf.update(app.config)
 
 @app.route("/", methods=["GET"])

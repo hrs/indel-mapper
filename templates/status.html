@@ -33,10 +33,10 @@
       <hr></hr>
 
       {% if processing %}
-        <p>Processing...</p>
+        <p>Processing... please refresh this page in a minute.</p>
       {% endif %}
 
-      {% if upload.succeeded %}
+      {% if upload %}
         <p>[<a href="{{ upload }}">Download a CSV</a>]</p>
       {% endif %}
 

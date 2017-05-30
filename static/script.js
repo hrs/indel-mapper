@@ -1,4 +1,4 @@
-MAX_ALIGNMENT_FILE_SIZE = 40 * 1024 * 1024; // 40MB
+MAX_ALIGNMENT_FILE_SIZE = 90 * 1024 * 1024; // 40MB
 MAX_REFERENCE_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 PERMISSION_TO_UPLOAD_REFERENCE = false;
@@ -34,14 +34,16 @@ function getSignedRequest(file, description){
 	if (!file) {
 		showMessage("No " + description + " file.", "server-error");
 	} else {
+		uploadFileRequest = null
 		$.get("/sign_s3/", {"type": file.type})
 			.fail(function() {
 				showMessage("Server error: failed to get signed request for " + description + ".", "server-error");
 			})
 			.done(function (data) {
 				parsedData = JSON.parse(data)
-				uploadFile(file, parsedData.data, parsedData.url, description);
+				uploadFileRequest = uploadFile(file, parsedData.data, parsedData.url, description);
 			});
+		return uploadFileRequest
 	}
 }
 
@@ -50,7 +52,6 @@ function setHiddenFieldValues(field, value){
 }
 
 function uploadFile(file, s3, url, description){
-	console.log(s3);
 
 	s3Form = new FormData();
 	for(key in s3.fields){
@@ -58,29 +59,23 @@ function uploadFile(file, s3, url, description){
 	}
 	s3Form.append('file', file);
 
-	// $.post(s3.url, s3Form)
-	// 	.fail(function (){
-	// 		showMessage("Failed to upload " + description + " file.", "server-error");
-	// 	})
-	// 	.done(function (data){
-	// 		setHiddenFieldValues(description, url)
-	// 	});
-
 	$.ajax({
         url: s3.url,
         type: 'POST',
 
         data: s3Form,
-
+		dataType: "xml",
         cache: false,
         contentType: false,
         processData: false,
     })
-		.fail(function (){
+		.fail(function (data){
 			showMessage("Failed to upload " + description + " file.", "server-error");
 		})
 		.done(function (data){
-			setHiddenFieldValues(description, url)
+			console.log("done uploading " + description);
+			setHiddenFieldValues(description, url);
+			trySubmitForm();
 		});
 }
 
@@ -91,6 +86,13 @@ $(function() {
         heightStyle: "content",
     });
 });
+
+function trySubmitForm(){
+	console.log('trying to submit');
+	if ($("[name=reference-hidden]")[0].value != "" && $("[name=alignment-hidden]")[0].value != ""){
+		$('form').submit();
+	}
+}
 
 $(document).ready(function() {
     $('[name=alignment]').bind('change', function() {
@@ -107,12 +109,7 @@ $(document).ready(function() {
 		clearMessages("server-error");
 		e.preventDefault();
 
-		$.when(getSignedRequest($('[name=alignment]')[0].files[0], 'alignment', e),
-			   getSignedRequest($('[name=reference]')[0].files[0], 'reference', e))
-			.done(function() {
-				if ($("[name=reference-hidden]")[0].value != "" && $("[name=alignment-hidden]")[0].value != ""){
-					$('form').submit();
-				}
-			});
+		getSignedRequest($('[name=alignment]')[0].files[0], 'alignment');
+		getSignedRequest($('[name=reference]')[0].files[0], 'reference');
 	});
 });

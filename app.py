@@ -172,16 +172,17 @@ def isNoneOrEmpty(url_from_request_parameter):
 
 @app.route('/process_files/', methods=['POST'])
 def process_results():
-    reference_url = request.args.get('reference-hidden')
-    alignment_url = request.args.get('alignment-hidden')
+    reference_url = request.form.get('reference-hidden')
+    alignment_url = request.form.get('alignment-hidden')
 
     if not isNoneOrEmpty(reference_url) and not isNoneOrEmpty(alignment_url):
         results = compute_indels_near_cutsite.apply_async(args=[reference_url, alignment_url])
         # Display the status page containing the results
+        print(results.id)
         return redirect(url_for('taskstatus', task_id=results.id))
     else:
         flash("Missing files.")
-        return render_template("index.html")
+        return redirect(url_for('index'))
 
 if __name__ == "__main__":
     app.run()

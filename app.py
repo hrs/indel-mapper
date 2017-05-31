@@ -7,6 +7,7 @@ from indel_mapper_lib.csv_upload import CsvUpload
 from indel_mapper_lib.csv_upload import NullCsvUpload
 from indel_mapper_lib.csv_writer import CsvWriter
 from indel_mapper_lib.json_writer import JsonWriter
+from indel_mapper_lib.presigned_post import PresignedPost
 from indel_mapper_lib.presenter import Presenter
 from indel_mapper_lib.reference_parser import ReferenceParser
 from indel_mapper_lib.reference_presenter import ReferencePresenter
@@ -24,7 +25,6 @@ LOCAL_REDIS_URL = "redis://localhost:6379/0"
 
 app = Flask(__name__)
 app.secret_key = os.environ["SECRET_FLASK_KEY"]
-app.config["MAX_CONTENT_LENGTH"] = 45 * 1024 * 1024 # 45 MB
 app.config["UPLOAD_FOLDER"] = "/tmp"
 
 if "S3_ACCESS_KEY" in os.environ and "S3_SECRET_KEY" in os.environ:
@@ -46,61 +46,12 @@ else:
 celery = Celery(app.name,
                 broker=app.config["CELERY_BROKER_URL"],
                 task_track_started=True,
-                task_soft_time_limit=150)
+                task_soft_time_limit=350)
 celery.conf.update(app.config)
 
-
-@app.route("/", methods=['GET', 'POST'])
+@app.route("/", methods=["GET"])
 def index():
-    if request.method == 'POST':
-        reference_file = request.files.get('reference')
-        alignment_file = request.files.get('alignment')
-
-        if not (alignment_file and reference_file):
-            flash("You must submit an alignment file and a reference file.")
-        elif not _is_extension(reference_file, ".csv"):
-            flash("The reference file must be a .csv file.")
-        elif not _is_extension(alignment_file, ".sam"):
-            flash("The alignment file must be a .sam file.")
-        else:
-            try:
-                # random, unlikely to collide names
-                tmp_reference_path = _random_tempfile_path()
-                tmp_alignment_path = _random_tempfile_path()
-
-                reference_file.save(tmp_reference_path)
-                alignment_file.save(tmp_alignment_path)
-
-                if app.s3_is_configured:
-                    reference_upload = _upload_file(tmp_reference_path, _random_filename())
-                    alignment_upload = _upload_file(tmp_alignment_path, _random_filename())
-                    results = compute_indels_near_cutsite.apply_async(args=[reference_upload.url, alignment_upload.url])
-
-                    # Remove temporary files
-                    os.remove(tmp_reference_path)
-                    os.remove(tmp_alignment_path)
-                else:
-                    results = compute_indels_near_cutsite.apply_async(args=[tmp_reference_path, tmp_alignment_path])
-
-                # Display the status page containing the results
-                return redirect(url_for('taskstatus', task_id=results.id))
-
-            except Exception as e:
-                print(e)
-                flash("Error processing.")
-                return render_template("index.html", results=[], upload=NullCsvUpload())
-    return render_template("index.html", results=[], upload=NullCsvUpload())
-
-# HTTP Error 413: Request Entity Too Large
-@app.errorhandler(413)
-def request_entity_too_large(error):
-    flash("Uploaded file is too large.")
-    return render_template("index.html", results=[], upload=NullCsvUpload()), 413
-
-# This is a first pass at naive file detection.
-def _is_extension(filestorage, extension):
-    filename = filestorage.filename
-    return filename.endswith(extension)
+    return render_template("index.html")
 
 @celery.task(bind=True)
 def compute_indels_near_cutsite(self, csv_path, sam_path):
@@ -161,7 +112,7 @@ def _upload_file(local_filename, remote_filename):
 
 def _upload_results(results_csv_filename):
     if not app.s3_is_configured:
-        print("Aws isn't configured, can't upload CSV to S3.")
+        print("AWS isn't configured, can't upload CSV to S3.")
         return NullCsvUpload()
 
     # Upload it to S3.
@@ -197,6 +148,41 @@ def taskstatus(task_id):
         return render_template("status.html", results=[], upload="", processing=False)
     else:
         return render_template("status.html", results=[], upload="", processing=True)
+
+@app.route('/sign_s3/', methods=['GET'])
+def sign_s3():
+    if not app.s3_is_configured:
+        return json.dumps({"message": "AWS not configured."}), 500
+
+    presigned_post = PresignedPost(app.s3_access_key,
+                                   app.s3_secret_key,
+                                   _random_filename(),
+                                   request.args.get('file_type'))
+
+    if presigned_post.succeeded:
+        return json.dumps({
+            "data": presigned_post.presigned_data,
+            "url": presigned_post.url
+        })
+    else:
+        return json.dumps({"message": "Could not get signed request."}), 500
+
+def isNoneOrEmpty(url_from_request_parameter):
+    return url_from_request_parameter is None or url_from_request_parameter == ""
+
+@app.route('/process_files/', methods=['POST'])
+def process_results():
+    reference_url = request.form.get('reference-hidden')
+    alignment_url = request.form.get('alignment-hidden')
+
+    if not isNoneOrEmpty(reference_url) and not isNoneOrEmpty(alignment_url):
+        results = compute_indels_near_cutsite.apply_async(args=[reference_url, alignment_url])
+        # Display the status page containing the results
+        print(results.id)
+        return redirect(url_for('taskstatus', task_id=results.id))
+    else:
+        flash("Missing files.")
+        return redirect(url_for('index'))
 
 if __name__ == "__main__":
     app.run()

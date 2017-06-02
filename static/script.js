@@ -31,9 +31,7 @@ function checkUploadFiles(target, description, fileExtension, maxSize, cssClass,
 }
 
 function getSignedRequest(file, description){
-  if (!file) {
-    showMessage("No " + description + " file.", "server-error");
-  } else {
+  if (file) {
     uploadFileRequest = null
     $.get("/sign_s3/", {"type": file.type})
       .fail(function() {
@@ -44,6 +42,8 @@ function getSignedRequest(file, description){
         uploadFileRequest = uploadFile(file, parsedData.data, parsedData.url, description);
       });
     return uploadFileRequest
+  } else {
+    showMessage("No " + description + " file.", "server-error");
   }
 }
 
@@ -52,11 +52,12 @@ function setHiddenFieldValues(field, value){
 }
 
 function uploadFile(file, s3, url, description){
-
   s3Form = new FormData();
+
   for(key in s3.fields){
     s3Form.append(key, s3.fields[key]);
   }
+
   s3Form.append('file', file);
 
   $.ajax({

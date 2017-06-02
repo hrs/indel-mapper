@@ -167,15 +167,15 @@ def sign_s3():
     else:
         return json.dumps({"message": "Could not get signed request."}), 500
 
-def isNoneOrEmpty(url_from_request_parameter):
-    return url_from_request_parameter is None or url_from_request_parameter == ""
+def is_present(url_from_request_parameter):
+    return url_from_request_parameter is not None and url_from_request_parameter != ""
 
 @app.route('/process_files/', methods=['POST'])
 def process_results():
     reference_url = request.form.get('reference-hidden')
     alignment_url = request.form.get('alignment-hidden')
 
-    if not isNoneOrEmpty(reference_url) and not isNoneOrEmpty(alignment_url):
+    if is_present(reference_url) and is_present(alignment_url):
         results = compute_indels_near_cutsite.apply_async(args=[reference_url, alignment_url])
         # Display the status page containing the results
         print(results.id)

@@ -17,22 +17,21 @@
 
 
       <div class="flashes">
-      {% with flashes = get_flashed_messages() %}
-        {% if flashes %}
+        {% with flashes = get_flashed_messages() %}
+          {% if flashes %}
             <ul class="server-error">
               {% for f in flashes %}
-              <li>{{ f }}</li>
+                <li>{{ f }}</li>
               {% endfor %}
             </ul>
-		{% endif %}
-	  {% endwith %}
+          {% endif %}
+        {% endwith %}
       </div>
 
       {% block body %}
       {% endblock body %}
 
-
-	  <div>
+      <div>
         <label for="alignment">Alignment SAM File</label>
         <input name="alignment" type="file">
         <p> The alignment SAM file is the output of bowtie2 alignment. (Max size 100MB) <p>
@@ -66,8 +65,9 @@
 
       <hr></hr>
 
-    <footer>
-      <p>Indel Mapper is free software, licensed under the <a href="https://gnu.org/licenses/gpl.html">GPLv3</a>. The code is available on <a href="https://github.com/hrs/indel-mapper">GitHub</a>.</p>
-    </footer>
+      <footer>
+        <p>Indel Mapper is free software, licensed under the <a href="https://gnu.org/licenses/gpl.html">GPLv3</a>. The code is available on <a href="https://github.com/hrs/indel-mapper">GitHub</a>.</p>
+      </footer>
+    </div>
   </body>
 </html>

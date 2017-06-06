@@ -27,3 +27,11 @@ class TestAlignment(unittest.TestCase):
 
         self.assertTrue(container_alignment.starts_with(alignment_a))
         self.assertFalse(container_alignment.starts_with(alignment_b))
+
+    def test_to_dict(self):
+        self.assertEqual(Alignment("foo", "bar").to_dict(),
+                         {
+                             "reference": "foo",
+                             "read": "bar"
+                         }
+        )

@@ -5,7 +5,6 @@ from .mutation_cluster import MutationCluster
 class TestMutationCluster(unittest.TestCase):
 
     def test_mutation_cluster(self):
-
         alignment_a = Alignment(read="-aaa|a-",
                                 reference="-aaa|t-")
 
@@ -55,3 +54,25 @@ class TestMutationCluster(unittest.TestCase):
         cas9_region = Alignment(read="A|CCA|AAG", reference="A|CCA|AAA")
         cluster = MutationCluster(alignment, cas9_region)
         self.assertEqual(cluster.has_mutations_adjacent_to_cutsite(), True)
+
+    def test_to_dict(self):
+        alignment_a = Alignment(read="-aaa|a-",
+                                reference="-aaa|t-")
+
+        alignment_b = Alignment(read="-ccc|g-",
+                                reference="-ccc|t-")
+
+        cas9_region = Alignment(reference="caa", read="gta")
+
+        cluster = MutationCluster(alignment_a, cas9_region)
+
+        cluster.add_read(alignment_b)
+
+        self.assertEqual(cluster.to_dict(),
+                         {
+                             "cas9_region": {"reference": "caa", "read": "gta"},
+                             "count": 2,
+                             "description": "2 mutations (ca to gt)",
+                             "alignments": [{"reference":"-aaa|t-", "read":"-aaa|a-"}, {"reference":"-ccc|t-", "read":"-ccc|g-"}]
+                         }
+        )

@@ -185,7 +185,7 @@ def process_results():
         return redirect(url_for('index'))
 
 
-@app.route('/visualize/', methods=['GET','POST'])
+@app.route('/visualize/', methods=['POST'])
 def visualize():
     if request.method == 'POST':
         try:

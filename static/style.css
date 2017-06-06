@@ -1,3 +1,13 @@
+h1 a {
+	color: #477dca;
+	text-decoration: none;
+	transition: color 150ms ease;
+}
+
+h1 a:hover {
+	color: #3964a2;
+}
+
 .sequence {
     font-family: Courier;
 }

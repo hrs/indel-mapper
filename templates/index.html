@@ -12,7 +12,7 @@
   <body>
     <div class="container">
       <div class="banner">
-        <h1 id=title>Indel Mapper</h1>
+        <h1 id=title><a href="/">Indel Mapper</a></h1>
       </div>
 
 
@@ -64,6 +64,25 @@
       </div>
 
       <hr></hr>
+
+	  <h2>
+		What if I already ran Indel Mapper locally?
+	  </h2>
+
+	  <p>
+		If you ran Indel Mapper locally and generated the metadata JSON, you can upload it here for visualization.
+	  </p>
+
+	  <form method="POST" action="/visualize/" enctype=multipart/form-data>
+        <div>
+          <label for="metadata">Metadata JSON File</label>
+          <input name="metadata" type="file">
+          <p> The output metadata of running Indel Mapper. (Max size 20MB) <p>
+		</div>
+		<input name="visualization-submit" type="submit" value="Submit">
+      </form>
+
+	  <hr></hr>
 
       <footer>
         <p>Indel Mapper is free software, licensed under the <a href="https://gnu.org/licenses/gpl.html">GPLv3</a>. The code is available on <a href="https://github.com/hrs/indel-mapper">GitHub</a>.</p>

@@ -26,6 +26,7 @@ LOCAL_REDIS_URL = "redis://localhost:6379/0"
 app = Flask(__name__)
 app.secret_key = os.environ["SECRET_FLASK_KEY"]
 app.config["UPLOAD_FOLDER"] = "/tmp"
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
 
 if "S3_ACCESS_KEY" in os.environ and "S3_SECRET_KEY" in os.environ:
     app.s3_access_key = os.environ["S3_ACCESS_KEY"]
@@ -178,11 +179,37 @@ def process_results():
     if is_present(reference_url) and is_present(alignment_url):
         results = compute_indels_near_cutsite.apply_async(args=[reference_url, alignment_url])
         # Display the status page containing the results
-        print(results.id)
         return redirect(url_for('taskstatus', task_id=results.id))
     else:
         flash("Missing files.")
         return redirect(url_for('index'))
+
+
+@app.route('/visualize/', methods=['GET','POST'])
+def visualize():
+    if request.method == 'POST':
+        try:
+            if 'metadata' not in request.files:
+                flash("No metadata JSON file.")
+                return render_template("status.html", results=[], upload="", processing=False)
+            else:
+                if _is_extension(request.files['metadata'], ".json"):
+                    metadata = request.files['metadata'].read().decode("utf-8")
+                    reference_presenter_results = json.loads(metadata)
+                    return render_template("status.html", results=reference_presenter_results, upload="", processing=False)
+                else:
+                    flash("Metadata file doesn't end in .json")
+                    return render_template("status.html", results=[], upload="", processing=False)
+        except Exception as e:
+            print(e)
+            flash("Error processing.")
+            return render_template("status.html", results=[], upload="", processing=False)
+
+
+def _is_extension(filestorage, extension):
+     filename = filestorage.filename
+     return filename.endswith(extension)
+
 
 if __name__ == "__main__":
     app.run()

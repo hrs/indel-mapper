@@ -60,19 +60,26 @@ class ReferenceProcessor(object):
         """Alignment, Alignment -> Alignment"""
         return Realigner(cas9_region).align()
 
+    def _pam_and_n20_indexes(self, is_ngg, n20_index, pam_index):
+        if not is_ngg:
+            return min((n20_index, pam_index)), max((n20_index, pam_index))
+        else:
+            return min((n20_index+1, pam_index+1)), max((n20_index+1, pam_index+1))
+
     def get_sequence_representation(self, reference, read):
         """Reference, Read -> [Char], [Char]"""
         aligned_pairs = read.aligned_pairs
         reference_sequence = reference.sequence
         read_sequence = read.query_sequence
 
-        reference_presentation = []
-        read_presentation = []
+        reference_presentation = ['-'] * len(aligned_pairs)
+        read_presentation = ['-'] * len(aligned_pairs)
 
-        match_marker = "-"
         indel_marker = "_"
 
-        cutsite_region_presentation = ''
+        pam_and_n20_min_index, pam_and_n20_max_index = self._pam_and_n20_indexes(reference.is_ngg(),
+                                                                                 reference.n20_index,
+                                                                                 reference.pam_index)
 
         for aligned_pair_index, sequence_indexes in enumerate(aligned_pairs):
             read_index, reference_index = sequence_indexes
@@ -81,27 +88,36 @@ class ReferenceProcessor(object):
                                                      aligned_pairs,
                                                      reference_sequence,
                                                      read_sequence,
-                                                     reference.pam_index(),
-                                                     reference.n20_index(),
-                                                     reference.is_ngg())
+                                                     pam_and_n20_min_index,
+                                                     pam_and_n20_max_index)
+
+            previousIsMismatch = False
 
             if relationship.is_insertion():
-                reference_presentation.append(indel_marker)
-                read_presentation.append(read_sequence[read_index])
+                reference_presentation[aligned_pair_index] = indel_marker
+                read_presentation[aligned_pair_index] = read_sequence[read_index]
+                previousIsMismatch = True
             elif relationship.is_deletion():
-                reference_presentation.append(reference_sequence[reference_index])
-                read_presentation.append(indel_marker)
+                reference_presentation[aligned_pair_index] = reference_sequence[reference_index]
+                read_presentation[aligned_pair_index] = indel_marker
+                previousIsMismatch = True
             else:
                 read_base = read_sequence[read_index]
                 reference_base = reference_sequence[reference_index]
-                if relationship.is_mismatch() or \
-                   relationship.is_between_pam_and_n20() or \
-                   relationship.next_to_mismatch_or_indel():
-                    reference_presentation.append(reference_base)
-                    read_presentation.append(read_base)
+                if relationship.is_between_pam_and_n20():
+                    reference_presentation[aligned_pair_index] = reference_base
+                    read_presentation[aligned_pair_index] = read_base
+                    previousIsMismatch = False
+                elif relationship.is_mismatch_but_not_indel():
+                    reference_presentation[aligned_pair_index] = reference_base
+                    read_presentation[aligned_pair_index] = read_base
+                    previousIsMismatch = True
+                elif previousIsMismatch or relationship.next_is_mismatch_or_indel():
+                    reference_presentation[aligned_pair_index] = reference_base
+                    read_presentation[aligned_pair_index] = read_base
+                    previousIsMismatch = False
                 else:
-                    reference_presentation.append(match_marker)
-                    read_presentation.append(match_marker)
+                    previousIsMismatch = False
 
         return reference_presentation, read_presentation
 
@@ -109,11 +125,11 @@ class ReferenceProcessor(object):
         """[Char], [Char], Reference, Read -> String, String"""
         # denotes the positions of the cutsite, the n20, and the pam
 
-        cutsite_index = reference.cutsite_index()
-        pam_index = reference.pam_index()
-        n20_pam_index = reference.n20_pam_index()
-        n20_index = reference.n20_index()
-
-        inserter = Cas9IndicatorInserter(cutsite_index, pam_index, n20_pam_index, n20_index, read.aligned_pairs, reference.is_ngg())
+        inserter = Cas9IndicatorInserter(reference.cutsite_index,
+                                         reference.pam_index,
+                                         reference.n20_pam_index,
+                                         reference.n20_index,
+                                         read.aligned_pairs,
+                                         reference.is_ngg())
 
         return inserter.insert_indicators(reference_presentation, read_presentation)

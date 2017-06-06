@@ -56,10 +56,10 @@ class TestReference(unittest.TestCase):
 
         ccn_reference = Reference("", n20, sequence, pam, [])
 
-        self.assertEqual(ngg_reference.n20_pam_index(), 16)
-        self.assertEqual(ngg_reference.cutsite_index(), 13)
-        self.assertEqual(ccn_reference.n20_pam_index(), 3)
-        self.assertEqual(ccn_reference.cutsite_index(), 6)
+        self.assertEqual(ngg_reference.n20_pam_index, 16)
+        self.assertEqual(ngg_reference.cutsite_index, 13)
+        self.assertEqual(ccn_reference.n20_pam_index, 3)
+        self.assertEqual(ccn_reference.cutsite_index, 6)
 
         n20 = "GCCATTTACACTTCTTTTG"
         sequence = "AAGGGGGTTTGTTCTCTGGTGGGCAGGAGTGGGGGGTCGC" \
@@ -72,8 +72,8 @@ class TestReference(unittest.TestCase):
 
         long_reference = Reference("", n20, sequence, pam, [])
 
-        self.assertEqual(long_reference.n20_pam_index(), 145)
-        self.assertEqual(long_reference.cutsite_index(), 142)
+        self.assertEqual(long_reference.n20_pam_index, 145)
+        self.assertEqual(long_reference.cutsite_index, 142)
 
     def test_pam_and_n20_index(self):
         n20 = "GCCATTTACACTTCTTTTG"
@@ -87,8 +87,8 @@ class TestReference(unittest.TestCase):
 
         long_reference = Reference("", n20, sequence, pam, [])
 
-        self.assertEqual(long_reference.pam_index(), 148)
-        self.assertEqual(long_reference.n20_index(), 126)
+        self.assertEqual(long_reference.pam_index, 148)
+        self.assertEqual(long_reference.n20_index, 126)
 
     def test_distance_to_cutsite(self):
         n20 = "aaaatttc"
@@ -127,8 +127,8 @@ class TestReference(unittest.TestCase):
 
         ccn_reference = Reference("", n20, sequence, pam, [])
 
-        self.assertEqual(ccn_reference.n20_pam_index(), 6)
-        self.assertEqual(ccn_reference.cutsite_index(), 9)
+        self.assertEqual(ccn_reference.n20_pam_index, 6)
+        self.assertEqual(ccn_reference.cutsite_index, 9)
 
 
     def test_reads_with_indels_near_the_cutsite(self):
